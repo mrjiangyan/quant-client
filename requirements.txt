@@ -1,0 +1,8 @@
+loguru==0.7.2
+influxdb==5.3.1
+influxdb-client==1.38.0
+sqlalchemy==2.0.13
+sqlalchemy_serializer==1.4.1
+selenium==4.15.2
+yahooquery==2.3.3
+easyquotation==0.7.5
