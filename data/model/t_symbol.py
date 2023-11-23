@@ -11,13 +11,13 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 't_symbols'
 
     symbol = Column("symbol", String, primary_key=True)
-    market = Column("market", String, doc="所在市场")
+    market = Column("market", String, index=True,doc="所在市场")
     name = Column("name", String, doc="名称")
     last_price = Column("last_price", Float,  doc="最后价格")
     ipo_year = Column("ipo_year", Integer, index=True, doc="IPO年份")
     country = Column("country", String, index=True, doc="country")
     industry = Column("industry", String, index=True, doc="所属行业")
-    market_cap = Column("market_cap", Integer, index=True, doc="market_cap")
+    market_cap = Column("market_cap", Integer, index=True, doc="市值")
     
     
     

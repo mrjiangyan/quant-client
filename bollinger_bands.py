@@ -1,4 +1,4 @@
-from data.database import MyInfluxDBClient
+from data.database_influxdb import MyInfluxDBClient
 import pandas as pd
 from datetime import datetime, timedelta
 import pytz
@@ -12,7 +12,6 @@ bucket_name= "stock-bucket-day"
 measurement_prefix = "stock_k_line_"
 
 influxdb_instance = MyInfluxDBClient()
-
 
 
 

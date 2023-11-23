@@ -6,3 +6,4 @@ sqlalchemy_serializer==1.4.1
 selenium==4.15.2
 yahooquery==2.3.3
 easyquotation==0.7.5
+backtrader==1.9.78.123

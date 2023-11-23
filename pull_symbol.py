@@ -12,7 +12,7 @@ database.global_init("edge.db")
 
 url = "blob:https://www.nasdaq.com/a57045f7-ec5e-4f27-9502-0bf84d305728"
 
-local_path = "nasdaq-symbol.csv"
+local_path = "nasdaq_screener_1700732152897.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
@@ -36,13 +36,16 @@ with database.create_session() as db_sess:
         # Loop through each row of the DataFrame
         for index, row in df.iterrows():
             symbol = str(row['Symbol']).upper()
+            if any(char in symbol for char in '^/'):
+                continue
             logger.info(symbol)
             is_create = False
-            domain = get_by_symbol(db_sess, symbol)
+            domain = get_by_symbol(db_sess, symbol,'US')
             if domain is None:
                 domain = Symbol()
                 domain.symbol = symbol
                 is_create = True
+            print(row)
             domain.country = row['Country'] 
             domain.industry = row['Industry'] 
             domain.ipo_year = row['IPO Year'] 

@@ -1,10 +1,18 @@
-import easyquotation
-quotation = easyquotation.use("hkquote")
-Res_Sina_stocks = quotation.real(['AAPL','00700'], prefix= True)
-print(Res_Sina_stocks)
+from datetime import datetime
+import backtrader as bt
 
-# print(quotation.all_market)
+class SmaCross(bt.SignalStrategy):
+    def __init__(self):
+        sma1, sma2 = bt.ind.SMA(period=10), bt.ind.SMA(period=30)
+        crossover = bt.ind.CrossOver(sma1, sma2)
+        self.signal_add(bt.SIGNAL_LONG, crossover)
 
-# quotation = easyquotation.use('tencent')
-# loaded_codes_list=quotation.load_stock_codes()    #返回无前缀的股票代码列表，也含有一些基金代码
-# print(loaded_codes_list)
+cerebro = bt.Cerebro()
+cerebro.addstrategy(SmaCross)
+
+data0 = bt.feeds.YahooFinanceData(dataname='MSFT', fromdate=datetime(2011, 1, 1),
+                                  todate=datetime(2012, 12, 31))
+cerebro.adddata(data0)
+
+cerebro.run()
+cerebro.plot()

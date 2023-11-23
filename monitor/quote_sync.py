@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from data.database import MyInfluxDBClient
+from data.database_influxdb import MyInfluxDBClient
 from influxdb_client import Point
 from datetime import datetime, timedelta
 from loguru import logger

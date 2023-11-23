@@ -1,4 +1,4 @@
-from data.database import MyInfluxDBClient
+from data.database_influxdb import MyInfluxDBClient
 import pandas as pd
 from datetime import datetime, timedelta
 import pytz
