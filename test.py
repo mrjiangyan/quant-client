@@ -1,5 +1,5 @@
 from datetime import datetime
-import backtrader as bt
+import backtrader_test as bt
 
 class SmaCross(bt.SignalStrategy):
     def __init__(self):

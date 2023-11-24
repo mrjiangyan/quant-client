@@ -69,7 +69,10 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         return
     df.rename(columns={'close': 'Close', 'open': 'Open', 'volume': 'Volume', 'high': 'High', 'low': 'Low'}, inplace=True)
     df['Date'] = df.index.get_level_values('date')
-    columns_to_save = ['Date','Open', 'High', 'Low', 'Close', 'Volume']
+    if 'adjclose' in df:
+        columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'adjclose', 'Volume']
+    else:
+        columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     if os.path.isfile(file_path):     
         existing_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
         existing_data.index = pd.to_datetime(existing_data.index, utc=True)
