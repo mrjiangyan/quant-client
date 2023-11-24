@@ -1,6 +1,4 @@
-import yahooquery as yq
 import pandas as pd
-import yfinance as yf
 from loguru import logger
 from data.model.t_symbol import Symbol
 import os
@@ -16,10 +14,6 @@ local_path = "nasdaq_screener_1700732152897.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
-
-# print(current_directory)
-# Get the parent directory
-# parent_directory = os.path.dirname(current_directory)
 
 # Create the full path for the download file in the current directory
 download_path = os.path.join(current_directory, 'resources', local_path)
@@ -49,6 +43,7 @@ with database.create_session() as db_sess:
             domain.country = row['Country'] 
             domain.industry = row['Industry'] 
             domain.ipo_year = row['IPO Year'] 
+            domain.volume = row['Volume'] 
             domain.name = row['Name'] 
             domain.last_price = row['Last Sale'].replace("$","")
             domain.market = 'US'

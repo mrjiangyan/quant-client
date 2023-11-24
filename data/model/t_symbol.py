@@ -18,7 +18,8 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     country = Column("country", String, index=True, doc="country")
     industry = Column("industry", String, index=True, doc="所属行业")
     market_cap = Column("market_cap", Integer, index=True, doc="市值")
-    
+    volume = Column("volume", Integer, index=True, doc="成交量")
+
     
     
     # imdb_link = Column("imdb_link", String, index=True, doc="imdb_link")
