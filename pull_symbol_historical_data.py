@@ -15,31 +15,18 @@ import traceback
 max_retries = 5
 retry_delay = 5  # seconds
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 5
+max_concurrent_downloads = 100
+
+file_expire_seconds = 6 * 3600
 
 interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": '6mo' }
 # interval_map = { '1m': '7d' }
-# Function to create a session with a connection pool
-def create_session():
-    retry_strategy = Retry(
-        total=5,
-        backoff_factor=2,
-        status_forcelist=[429, 500, 502, 503, 504],
-        method_whitelist=["HEAD", "GET", "OPTIONS"]
-    )
-
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-
-    session = requests.Session()
-    session.mount("https://", adapter)
-    session.mount("http://", adapter)
-
-    return session
 
 
 # Function to download historical data for a symbol
 def download_data(symbol:Symbol, root_path):
     symbol_code = symbol.symbol.replace(" ", "")
+    print(symbol_code)
     for key, value in interval_map.items():
         try:
             directory_path =  os.path.join(root_path,  key)
@@ -52,7 +39,7 @@ def download_data(symbol:Symbol, root_path):
             logger.error(f"Error downloading data for {symbol_code},{key}: {e}")
     
 
-def download_1d(session, symbol_code, file_path):
+def download_1d(session, symbol_code:str, file_path:str):
     headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             "Cookie": "visitor-id=3437278853490150000V10; data-mn=3437278863490106000V10~~1; data-opx=a89cb73c-8eb3-48a9-9770-265531f9d712~~1; data-pub=35BE2056-0984-44DE-BA6B-AE30EA464B8B~~1; usp_status=1; data-zta=1991787319451354786~~63; data-gum=a_d00541f7-125b-469f-b65e-e0ed30ae7521~~63; data-crt=k-VRgzbl01CzWuWmvh4xaAIV3UnafZAyPOAqq74A~~63; data-mag=LPC1ZAU0-1I-2DUB~~63; data-ylm=3FVZGxxfZZxbwEH36nT3~~63; data-sht=1901683f-118b-43e4-b11a-cdb84ee7b9b5~~63",
@@ -75,7 +62,7 @@ def download_1d(session, symbol_code, file_path):
                     time.sleep(2)
 
 def download_yahoo(symbol:Symbol, period, interval, file_path):
-    ticker = Ticker(symbol.symbol, asynchronous=True, backoff_factor=1, max_workers=1, retry=5, timeout = 30)
+    ticker = Ticker(symbol.symbol, asynchronous=True, backoff_factor=1, max_workers=1, retry=5, timeout = 10)
     df = ticker.history(period=period, interval=interval)
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
@@ -84,17 +71,34 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     df['Date'] = df.index.get_level_values('date')
     columns_to_save = ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     if os.path.isfile(file_path):     
-        existing_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date', infer_datetime_format=True)  
-        existing_data.index = existing_data.index.tz_convert('America/New_York')
-      
+        existing_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
+        existing_data.index = pd.to_datetime(existing_data.index, utc=True)
+        # print(existing_data.index)
+        # print(existing_data.dtypes)
+        # existing_data.index = existing_data.index.tz_convert('America/New_York')
+
+        if isinstance(existing_data.index, pd.DatetimeIndex):
+            existing_data.index = existing_data.index.tz_localize(None)  # Remove timezone if present
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+        elif pd.Timestamp(existing_data.index):
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+        else:
+            print("Index type not recognized. Please check and handle accordingly.")
         df.reset_index(inplace=True)
         df = df[columns_to_save]
         df.set_index('Date', inplace=True) 
     
-        merged_data = pd.concat([existing_data, df]).sort_values('Date')
+        merged_data = pd.concat([existing_data, df])
+        merged_data.index = pd.to_datetime(merged_data.index)
+
+        # Sort the DataFrame by the index
+        merged_data = merged_data.sort_index()
+        # Sort the DataFrame by the 'Date' column
+        # merged_data = merged_data.sort_values('Date')
+        # merged_data = pd.concat([existing_data, df]).sort_values('Date')
         merged_data = merged_data[~merged_data.index.duplicated(keep='last')]
-        logger.info(merged_data)
-        merged_data.to_csv(file_path, index=False, columns=columns_to_save)
+        # logger.info(merged_data)
+        merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
         df.to_csv(file_path, index=False, columns=columns_to_save)
@@ -106,19 +110,18 @@ def should_download(symbol:Symbol, file_path:str):
         return False
          
     
-    # if symbol.symbol.startswith('A') == False:
-    #     print(symbol.symbol)
+    # if symbol.symbol != 'A':
     #     return False
     # 如果价格小于10元则暂时不用下载
-    if symbol.last_price < 10 or symbol.last_price > 2000:
+    if symbol.last_price < 3 or symbol.last_price > 500:
         return False
     
     # 成交量小于50万股的也不需要
-    if symbol.volume and symbol.volume < 50 * 1000:
+    if symbol.volume and symbol.volume < 50 * 10000:
             return False
         
         # 如果市值小于10元则暂时不用下载
-    if symbol.market_cap is None or symbol.market_cap < 10000000:
+    if symbol.market_cap is None or symbol.market_cap < 2500 * 10000:
         return False
     if os.path.exists(file_path):
         # Get the file's last modification time
@@ -126,8 +129,8 @@ def should_download(symbol:Symbol, file_path:str):
         # Get the current time
         current_time = time.time()
         # Check if the file was modified in the last hour (3600 seconds)
-        if current_time - last_modified_time < 7200:
-            return True
+        if current_time - last_modified_time < file_expire_seconds:
+            return False
         else:
             return True
     else:
@@ -141,9 +144,6 @@ def main():
     # Create the directory if it doesn't exist
     os.makedirs(download_path, exist_ok=True)
 
-    # Create a session with a connection pool
-    session = create_session()
-
     symbols = []
     # Get all symbols
     with database.create_session() as db_sess:
@@ -151,9 +151,9 @@ def main():
         
     
     # Use ThreadPoolExecutor to download data concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent_downloads) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers= max_concurrent_downloads) as executor:
         # Submit download tasks
-        futures = [executor.submit(download_data, symbol, download_path, session) for symbol in symbols]
+        futures = [executor.submit(download_data, symbol, download_path) for symbol in symbols]
 
         # Wait for all tasks to complete
         concurrent.futures.wait(futures)
