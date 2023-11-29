@@ -1,16 +1,16 @@
 # 导入所需模块
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-
 import datetime  # 日期时间模块
 import os.path  # 路径模块
 import sys  # 系统模块
 import pandas as pd
 # 导入backtrader平台
 import backtrader as bt
-#from data.service.symbol_service import getAll, get_by_symbol
+from data.service.symbol_service import getAll, get_by_symbol
 from datetime import datetime
 import argparse
-import data.database 
+
+from data import database 
 
 # 创建策略
 class TestStrategy(bt.Strategy):
@@ -135,13 +135,9 @@ if __name__ == '__main__':
         else:
             symbols = getAll(db_sess)
       
-     # 数据在样本的子文件夹中。需要找到脚本所在的位置
-        # 因为它可以从任何地方调用
-    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    start_date = '1950-11-27 00:00:00'
-    end_date = '2023-11-28 00:00:00'
-      
-      
+    current_working_directory = os.getcwd()
+    print(current_working_directory)
+  
     count = 0
     max = 0;
     min= 0;  
@@ -154,23 +150,24 @@ if __name__ == '__main__':
         # 添加策略
         cerebro.addstrategy(TestStrategy)
 
-        datapath = os.path.join(modpath, f'historical_data/1d/{symbol.symbol}.csv')
+        datapath = os.path.join(current_working_directory, f'historical_data/1d/{symbol.symbol}.csv')
         
+        print(datapath)
         if os.path.exists(datapath) == False:
             continue
-        existing_data = pd.read_csv(datapath, parse_dates=True, index_col='Date')
-        existing_data.index = pd.to_datetime(existing_data.index, utc=True)
+       
+        existing_data =  existing_data = pd.read_csv(datapath, parse_dates=['Date'], index_col='Date')  
         
-        print(symbol.symbol)
-        if existing_data is None:
+        if existing_data is None or existing_data.empty:
             continue
-
-        # 通过索引选择指定时间段的数据
-        selected_data = existing_data.loc[start_date:end_date]
-        if selected_data.empty:
+        
+        if existing_data.length < 26:
             continue
+        
+        existing_data.index = pd.to_datetime(existing_data.index, utc=True)
+        existing_data.index = existing_data.index.tz_localize(None).to_period('D')  # 去除时区信息
         # 创建数据源
-        data = bt.feeds.PandasData(dataname = selected_data)
+        data = bt.feeds.PandasData(dataname = existing_data)
         
         
         # 将数据源添加到Cerebro

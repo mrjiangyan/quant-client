@@ -76,7 +76,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
         # else:
         #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
-        existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
+       # existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
         # print(existing_data.index)
         # print(existing_data.dtypes)
         # existing_data.index = existing_data.index.tz_convert('America/New_York')

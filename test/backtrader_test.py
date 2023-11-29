@@ -2,7 +2,6 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import datetime  # 日期时间模块
 import os.path  # 路径模块
-import sys  # 系统模块
 import pandas as pd
 # 导入backtrader平台
 import backtrader as bt
@@ -39,9 +38,9 @@ class TestStrategy(bt.Strategy):
         low_price = self.datas[0].low[0]
         close_price = self.datas[0].close[0]
         volume = self.datas[0].volume[0]
-
         # Buy logic: Check for MACD crossover below the zero line
         dif = self.macd.lines.macd[0]
+        
         dea = self.macd.lines.signal[0]
         if dif < -0.5 and  dif > dea and dif < 0 and dif > self.macd.lines.macd[-1] and self.macd.lines.macd[-1] < self.macd.lines.signal[-1]:
             # target_date_str = '2023-11-24T00:00:00'
@@ -49,9 +48,8 @@ class TestStrategy(bt.Strategy):
             # and self.datas[0].datetime.datetime(0) == target_date      
             if self.current_position != 'long' :
                 #self.datas[0].datetime.datetime(0) == '2023-11-24T00:00:00'
-                print(self.datas[0].datetime.datetime(0))
                 self.log('日期: %s, 开盘价: %.2f, 最高价: %.2f, 最低价: %.2f, 收盘价: %.2f, 交易量: %.2f' %
-                    (date.strftime('%Y-%m-%d %H:%M'), open_price, high_price, low_price, close_price, volume))
+                    (date, open_price, high_price, low_price, close_price, volume))
                 # 记录数据序列的收盘价
                # Place the buy order
                 # 计算购买数量
@@ -122,11 +120,8 @@ if __name__ == '__main__':
       
      # 数据在样本的子文件夹中。需要找到脚本所在的位置
         # 因为它可以从任何地方调用
-    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
-    start_date = '2020-11-27 00:00:00'
-    end_date = '2023-11-27 00:00:00'
-      
-      
+    current_working_directory = os.getcwd()
+    
     count = 0
     max = 0;
     min= 0;  
@@ -139,28 +134,24 @@ if __name__ == '__main__':
         # 添加策略
         cerebro.addstrategy(TestStrategy)
 
-        datapath = os.path.join(modpath, f'historical_data/1d/{symbol.symbol}.csv')
+        datapath = os.path.join(current_working_directory, f'historical_data/1d/{symbol.symbol}.csv')
         
         if os.path.exists(datapath) == False:
             continue
+        
+        print(symbol.symbol)
         existing_data = pd.read_csv(datapath, parse_dates=True, index_col='Date')
         existing_data.index = pd.to_datetime(existing_data.index, utc=True)
         
         print(symbol.symbol)
-        if existing_data is None:
+        if existing_data is None or existing_data.empty:
             continue
-        #循环所有股票的投资收益
         
-
-        # 通过索引选择指定时间段的数据
-        selected_data = existing_data.loc[start_date:end_date]
-        if selected_data.empty:
+        print(len(existing_data))
+        if len(existing_data) < 28:
             continue
         # 创建数据源
-        data = bt.feeds.PandasData(dataname = selected_data)
-        
-
-        
+        data = bt.feeds.PandasData(dataname = existing_data)
         # 将数据源添加到Cerebro
         cerebro.adddata(data)
 
@@ -189,19 +180,3 @@ if __name__ == '__main__':
             f.write(f'最终投资组合价值：{symbol.symbol}: {profit}\n')
 
     print(f'计算总数:{count},最高:{max}, 最低:{min}, winner_count:{winner_count}')
-
-# data = bt.feeds.YahooFinanceCSVData(
-        
-    #     dataname=datapath,
-    #     # 不传递此日期之前的值
-    #     fromdate=datetime.datetime(2023,5,17),
-    #     # 不传递此日期之后的值
-    #     todate=datetime.datetime(2023, 11, 23),
-    #     reverse=False,
-    #     adjclose = True,
-    #     dtformat='%Y-%m-%d %H:%M:%S%z',  # Adjust the date format according to your data
-    #     adjvolume = False,
-    #     # round = False,
-    #     swapcloses = False,
-    #     # roundvolume= 10,
-    #     )
