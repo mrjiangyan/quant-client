@@ -10,13 +10,13 @@ database.global_init("edge.db")
 
 url = "blob:https://www.nasdaq.com/a57045f7-ec5e-4f27-9502-0bf84d305728"
 
-local_path = "nasdaq_screener_1700732152897.csv"
+local_path = "nasdaq_screener_1701148956309.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
 
 # Create the full path for the download file in the current directory
-download_path = os.path.join(current_directory, 'resources', local_path)
+download_path = os.path.join(current_directory, 'resources', 'screener',local_path)
 
 # Read CSV directly from the URL
 tables = pd.read_csv(download_path)

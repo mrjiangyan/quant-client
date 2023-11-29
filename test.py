@@ -1,18 +1,49 @@
-from datetime import datetime
-import backtrader_test as bt
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+import datetime
+import backtrader as bt
+import os.path  # 路径模块
+import sys  # 系统模块
 
-class SmaCross(bt.SignalStrategy):
+class MyStrategy(bt.Strategy):
+    params = (
+        ("period_me1", 12),
+        ("period_me2", 26),
+        ("period_signal", 9)
+    )
+
     def __init__(self):
-        sma1, sma2 = bt.ind.SMA(period=10), bt.ind.SMA(period=30)
-        crossover = bt.ind.CrossOver(sma1, sma2)
-        self.signal_add(bt.SIGNAL_LONG, crossover)
+        self.macd = bt.indicators.MACD(
+            self.data.close,
+            period_me1=self.params.period_me1,
+            period_me2=self.params.period_me2,
+            period_signal=self.params.period_signal
+        )
 
-cerebro = bt.Cerebro()
-cerebro.addstrategy(SmaCross)
+    def next(self):
+        date = self.data.datetime.date(0)
+        dif = self.macd.lines.macd[0]
+        dea = self.macd.lines.signal[0]
+        print(f"日期: {date}, DIF: {dif:.4f}, DEA: {dea:.4f}")
 
-data0 = bt.feeds.YahooFinanceData(dataname='MSFT', fromdate=datetime(2011, 1, 1),
-                                  todate=datetime(2012, 12, 31))
-cerebro.adddata(data0)
+         # If available, print additional attributes
+        if hasattr(self.macd.lines, 'histo'):
+            hist = self.macd.lines.histo[0]
+            print(f"MACD Histogram: {hist:.4f}")
 
-cerebro.run()
-cerebro.plot()
+
+if __name__ == "__main__":
+    cerebro = bt.Cerebro()
+    cerebro.addstrategy(MyStrategy)
+
+    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
+    datapath = os.path.join(modpath, f'historical_data/1d/NIO.csv')
+    # 加载你的数据
+    data = bt.feeds.YahooFinanceCSVData(
+        dataname=datapath,
+        fromdate=datetime.datetime(2014, 1, 1),
+        todate=datetime.datetime(2023, 11, 28),
+        reverse=False
+    )
+
+    cerebro.adddata(data)
+    cerebro.run()

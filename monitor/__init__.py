@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-import threading
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
-from monitor.quote_sync import sync
-
+from monitor.screener_sync import sync
+from monitor.historical_sync import sync as history_sync
+from datetime import datetime
 
 def start_monitor():
     print('start_monitor')
@@ -15,20 +16,18 @@ def start_monitor():
     }
     # 开启定时任务
     scheduler = BackgroundScheduler(executors=executors, timezone='Asia/Shanghai', daemon=True)
-
-    # spy_4khdr_cn_thread = threading.Thread(target= spy, daemon=True)
-    # spy_4khdr_cn_thread.start()
     
-    # scheduler.add_job(func= spy, id='start_spy', trigger="interval", 
-    #            minutes=60*6)
+    scheduler.add_job(func= sync, id='sync', trigger="cron", 
+        hour='6-16',  # 指定小时范围为 5 到 10
+        minute='0',  # 分钟设为 0
+        second='0',  # 秒设为 0
+        max_instances=1,
+        coalesce=False,
+        misfire_grace_time=60)
     
-    scheduler.add_job(func= sync, id='sync', trigger="cron",  hour='*', minute='*', second='0', max_instances=1, coalesce=False)
+    scheduler.add_job(func= history_sync, id='history_sync', trigger="cron",
+                      max_instances=3,
+                  hour='9-20', minute='*/15', misfire_grace_time = 25 * 60)
    
     scheduler.start()
-    
-    # job_thread = threading.Thread(target=start_job_monitor, daemon=True)
-    # job_thread.start()
-    # camera_exception_thread = threading.Thread(target=start_camera_exception, daemon=True)
-    # camera_exception_thread.start()
 
-    # create_day_folder(datetime.datetime.now().strftime('%Y%m%d'))

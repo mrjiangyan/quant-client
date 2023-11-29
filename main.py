@@ -11,13 +11,15 @@ from flask_cors import CORS
 from loguru import logger
 import os
 import faulthandler
+from data import database
 
 faulthandler.enable()
-
 
 def create_app():
     app = Flask(__name__)
 
+     # 必须要通过app上下文去启动数据库
+    database.global_init("edge.db")
     # 添加api接口到
     register_api(app)
 

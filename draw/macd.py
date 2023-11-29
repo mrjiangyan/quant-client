@@ -1,12 +1,7 @@
-from data.database_influxdb import MyInfluxDBClient
 import pandas as pd
-
-bucket_name= "stock-bucket-day"
-
-measurement_prefix = "stock_k_line_"
-
-influxdb_instance = MyInfluxDBClient()
-
+import os
+from datetime import datetime, timedelta
+import pytz
 
 short_window = 12
 long_window = 26
@@ -14,10 +9,10 @@ signal_window = 9
     
 # 计算MACD和DEA
 def calculate_macd(data, short_window, long_window, signal_window):
-    data['close'] = pd.to_numeric(data['close'])
+    data['Close'] = pd.to_numeric(data['Close'])
     # 计算短期和长期指数移动平均
-    short_ema = data['close'].ewm(span=short_window, adjust=False).mean()
-    long_ema = data['close'].ewm(span=long_window, adjust=False).mean()
+    short_ema = data['Close'].ewm(span=short_window, adjust=False).mean()
+    long_ema = data['Close'].ewm(span=long_window, adjust=False).mean()
 
     # 计算DIF（差离值）
     dif = short_ema - long_ema
@@ -44,7 +39,7 @@ def plot_macd(data, dif, macd, dea, signal_line, histogram):
 
     # 绘制股票价格
     plt.subplot(2, 1, 1)
-    plt.plot(data['close'], label='Close Price', color='blue')
+    plt.plot(data['Close'], label='Close Price', color='blue')
     plt.title('Stock Price and MACD')
     plt.legend()
 
@@ -61,25 +56,14 @@ def plot_macd(data, dif, macd, dea, signal_line, histogram):
     
 # 主函数
 def main():
-    start_date = '2022-01-01T00:00:00Z'
-    end_date = '2023-12-01T00:00:00Z'
-
-
-    flux_query = f'''
-    from(bucket: "{bucket_name}")
-      |> range(start: {start_date}, stop: {end_date})
-      |> filter(fn: (r) => r["_measurement"] == "{measurement_prefix}1d")
-      |> filter(fn: (r) => r["stock_code"] == "aapl")
-      |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-      |> keep(columns: ["_time", "close"])
-      |> yield(name: "daily_close")
-    '''
-
-    # print(flux_query)
-    # Execute the Flux query
-    stock_data = influxdb_instance.query_data_frame(query=flux_query)
-    # 下载股票数据
-    # stock_data = download_stock_data(ticker, start_date, end_date)
+   
+    file_path = os.path.join(os.getcwd(), 'historical_data/1d/AAPL.csv')
+    print(file_path)
+    stock_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
+    stock_data.index = pd.to_datetime(stock_data.index, utc=True)
+    end_date = datetime.now(pytz.utc)
+    start_date = end_date - timedelta(days=3 * 365)
+    stock_data = stock_data[(stock_data.index >= start_date) & (stock_data.index <= end_date)]
 
     # 计算MACD和DEA
     dif, macd, dea, signal_line, histogram = calculate_macd(stock_data, short_window, long_window, signal_window)

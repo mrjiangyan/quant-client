@@ -2,8 +2,6 @@ import os
 import time
 import requests
 import concurrent.futures
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 from data.service.symbol_service import getAll
 from data import database
 from data.model.t_symbol import Symbol
@@ -12,21 +10,19 @@ from yahooquery import Ticker
 from loguru import logger
 import traceback
 
-max_retries = 5
-retry_delay = 5  # seconds
 # Limit the number of symbols to download concurrently
 max_concurrent_downloads = 100
 
-file_expire_seconds = 6 * 3600
-
-interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": '6mo' }
-# interval_map = { '1m': '7d' }
+file_expire_seconds = 1 * 60
+index_col = 'Date'
+interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": 'ytd', "60m": 'ytd' }
+interval_map = { "1d": 'max', '1m': '7d' }
 
 
 # Function to download historical data for a symbol
 def download_data(symbol:Symbol, root_path):
     symbol_code = symbol.symbol.replace(" ", "")
-    print(symbol_code)
+    #print(symbol_code)
     for key, value in interval_map.items():
         try:
             directory_path =  os.path.join(root_path,  key)
@@ -35,7 +31,7 @@ def download_data(symbol:Symbol, root_path):
             if should_download(symbol,file_path):
                 download_yahoo(symbol, value, key, file_path)             
         except Exception as e:
-            traceback.print_exc()
+           # traceback.print_exc()
             logger.error(f"Error downloading data for {symbol_code},{key}: {e}")
     
 
@@ -73,9 +69,14 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'adjclose', 'Volume']
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
+    print(df)
     if os.path.isfile(file_path):     
         existing_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
-        existing_data.index = pd.to_datetime(existing_data.index, utc=True)
+        # if interval == '1d':
+        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
+        # else:
+        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
+        existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
         # print(existing_data.index)
         # print(existing_data.dtypes)
         # existing_data.index = existing_data.index.tz_convert('America/New_York')
@@ -94,13 +95,12 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data = pd.concat([existing_data, df])
         merged_data.index = pd.to_datetime(merged_data.index)
 
+        if interval == '1d':
+            merged_data.index = merged_data.index.tz_localize(None).to_period('D')  # 去除时区信息
         # Sort the DataFrame by the index
         merged_data = merged_data.sort_index()
-        # Sort the DataFrame by the 'Date' column
-        # merged_data = merged_data.sort_values('Date')
-        # merged_data = pd.concat([existing_data, df]).sort_values('Date')
         merged_data = merged_data[~merged_data.index.duplicated(keep='last')]
-        # logger.info(merged_data)
+      
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
@@ -112,9 +112,8 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    
-    # if symbol.symbol != 'A':
-    #     return False
+    if symbol.symbol != 'NIO':
+        return False
     # 如果价格小于10元则暂时不用下载
     if symbol.last_price < 3 or symbol.last_price > 500:
         return False
