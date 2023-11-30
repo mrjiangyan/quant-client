@@ -6,7 +6,7 @@ from data.service.symbol_service import get_by_symbol
 from data import database
 from datetime import datetime
 
-local_path = "nasdaq_screener_1701148956309.csv"
+local_path = "nasdaq_screener_1701331110646.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()

@@ -47,9 +47,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     # print(df)
-    if interval == '1d' and os.path.isfile(file_path):
-        os.remove(file_path)
-    if os.path.isfile(file_path):     
+    if interval != '1d' and os.path.isfile(file_path):     
         existing_data = None
         # if interval == '1d':
         #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
@@ -83,6 +81,8 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
+        if interval == '1d':
+            df.index = df.index.to_period('D')  # 去除时区信息
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
