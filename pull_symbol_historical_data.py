@@ -138,6 +138,19 @@ def should_download(symbol:Symbol, file_path:str):
     else:
         return True
 
+def filter_stocks(symbols):
+    filtered_symbols = []
+
+    for symbol in symbols:
+        # Assuming you have attributes like 'price', 'market_cap', and 'volume' for each symbol
+        if (
+            symbol.price >= 5 and
+            symbol.market_cap >= 50000000 and
+            symbol.volume >= 500000
+        ):
+            filtered_symbols.append(symbol)
+
+    return filtered_symbols
 
 def main():
     database.global_init("edge.db")
@@ -150,7 +163,8 @@ def main():
     # Get all symbols
     with database.create_session() as db_sess:
         symbols = getAll(db_sess)
-        
+      
+    symbols = filter_stocks(symbols)  
     
     # Use ThreadPoolExecutor to download data concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers= max_concurrent_downloads) as executor:

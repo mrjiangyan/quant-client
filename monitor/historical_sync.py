@@ -81,8 +81,8 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
-        if interval == '1d':
-            df.index = df.index.to_period('D')  # 去除时区信息
+        # if interval == '1d':
+        #     df.index = df.index.to_period('D')  # 去除时区信息
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
