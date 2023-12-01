@@ -19,8 +19,15 @@ class BaseStrategy(bt.Strategy):
     
     def internal_buy(self):
         if not self.check_allow_sell_or_buy():
-            return
+            return False
         
+        cash_to_spend = self.broker.get_cash() * self.params.percent_of_cash
+        if cash_to_spend <= 0:
+            return False
+
+        size = cash_to_spend / self.data.close[0]
+        if size <= 0:
+            return False
         date = self.datas[0].datetime.datetime(0)
         open_price = self.datas[0].open[0]
         high_price = self.datas[0].high[0]
@@ -28,17 +35,22 @@ class BaseStrategy(bt.Strategy):
         close_price = self.datas[0].close[0]
         volume = self.datas[0].volume[0]
         cash_to_spend = self.broker.getvalue() * self.params.percent_of_cash
-        size = cash_to_spend / self.data.close[0]
         self.buy(size=size)
         self.log('买入日期: %s, 开盘价: %.2f, 最高价: %.2f, 最低价: %.2f, 收盘价: %.2f, 交易量: %.2f' %
                     (date.strftime('%Y-%m-%d %H:%M'), open_price, high_price, low_price, close_price, volume))
-        self.log(f"买入完成: 价格 {self.data.close[0]},数量 {size}")
+        self.log(f"买入完成: 价格 {self.data.close[0]},数量 {size},总金额:{self.data.close[0]*size}")
+        return True
         
     def internal_sell(self):
         if not self.check_allow_sell_or_buy():
             return
-        self.sell(size=self.position.size)
         
+        
+        position_size = self.position.size
+        if position_size <= 0:
+            return
+
+        self.sell(size= position_size)
         date = self.datas[0].datetime.datetime(0)
         open_price = self.datas[0].open[0]
         high_price = self.datas[0].high[0]

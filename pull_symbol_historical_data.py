@@ -69,14 +69,14 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'adjclose', 'Volume']
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
-    print(df)
-    if os.path.isfile(file_path):     
-        existing_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
+    if interval != '1d' and os.path.isfile(file_path):     
+        existing_data = None
         # if interval == '1d':
         #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
         # else:
-        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
-       # existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
+        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col)  
+        existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
+        existing_data.index = pd.to_datetime(existing_data.index,  utc= True, errors='coerce')
         # print(existing_data.index)
         # print(existing_data.dtypes)
         # existing_data.index = existing_data.index.tz_convert('America/New_York')
@@ -90,20 +90,21 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
             print("Index type not recognized. Please check and handle accordingly.")
         df.reset_index(inplace=True)
         df = df[columns_to_save]
-        df.set_index('Date', inplace=True) 
+        df.set_index(index_col, inplace=True) 
     
         merged_data = pd.concat([existing_data, df])
         merged_data.index = pd.to_datetime(merged_data.index)
 
-        if interval == '1d':
-            merged_data.index = merged_data.index.tz_localize(None).to_period('D')  # 去除时区信息
         # Sort the DataFrame by the index
         merged_data = merged_data.sort_index()
         merged_data = merged_data[~merged_data.index.duplicated(keep='last')]
-      
+        if interval == '1d':
+            merged_data.index = merged_data.index.tz_localize(None).to_period('D')  # 去除时区信息
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
+        if interval == '1d':
+            df['Date'] = pd.to_datetime(df.index.get_level_values('date')).strftime('%Y-%m-%d')
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
@@ -112,7 +113,7 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    if symbol.symbol != 'NIO':
+    if symbol.symbol != 'A':
         return False
     # 如果价格小于10元则暂时不用下载
     if symbol.last_price < 3 or symbol.last_price > 500:
@@ -144,8 +145,8 @@ def filter_stocks(symbols):
     for symbol in symbols:
         # Assuming you have attributes like 'price', 'market_cap', and 'volume' for each symbol
         if (
-            symbol.price >= 5 and
-            symbol.market_cap >= 50000000 and
+            symbol.last_price >= 1 and
+            symbol.market_cap and symbol.market_cap >= 50000000 and
             symbol.volume >= 500000
         ):
             filtered_symbols.append(symbol)
@@ -164,7 +165,7 @@ def main():
     with database.create_session() as db_sess:
         symbols = getAll(db_sess)
       
-    symbols = filter_stocks(symbols)  
+    # symbols = filter_stocks(symbols)  
     
     # Use ThreadPoolExecutor to download data concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers= max_concurrent_downloads) as executor:

@@ -9,7 +9,6 @@ from yahooquery import Ticker
 from loguru import logger
 import traceback
 
-
 # Limit the number of symbols to download concurrently
 max_concurrent_downloads = 100
 
@@ -81,8 +80,8 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
-        # if interval == '1d':
-        #     df.index = df.index.to_period('D')  # 去除时区信息
+        if interval == '1d':
+            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).strftime('%Y-%m-%d')
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
@@ -92,20 +91,9 @@ def should_download(symbol:Symbol, file_path:str):
         return False
          
     download = True
-    # if symbol.symbol != 'AAPL':
-    #     return False
-     # 如果价格小于1元则暂时不用下载
     if symbol.last_price < 1:
         download = False
-    # 如果价格小于10元则暂时不用下载
-    # if symbol.last_price < 3 or symbol.last_price > 100:
-    #     return False
-    
-    # # 成交量小于50万股的也不需要
-    # if symbol.volume and symbol.volume < 10 * 10000:
-    #         return False
-        
-    #     # 如果市值小于10元则暂时不用下载
+    # 如果市值小于10元则暂时不用下载
     if symbol.market_cap is None or symbol.market_cap < 2500 * 10000:
         download = False
     # 如果文件已经存在则忽略上述的条件 无论如何都会根据文件修改时间的处理逻辑做判断
