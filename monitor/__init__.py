@@ -27,7 +27,7 @@ def start_monitor():
     
     scheduler.add_job(func= history_sync, id='history_sync', trigger="cron",
                       max_instances=3,
-                  hour='9-20', minute='*/15', misfire_grace_time = 25 * 60)
+                   minute='*/15', misfire_grace_time = 25 * 60)
    
     scheduler.start()
 

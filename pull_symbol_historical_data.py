@@ -16,7 +16,7 @@ max_concurrent_downloads = 100
 file_expire_seconds = 1 * 60
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": 'ytd', "60m": 'ytd' }
-interval_map = { "1d": 'max', '1m': '7d' }
+interval_map = { "1d": 'max' ,'1m': '7d',"1h": 'ytd'}
 
 
 # Function to download historical data for a symbol
@@ -31,7 +31,7 @@ def download_data(symbol:Symbol, root_path):
             if should_download(symbol,file_path):
                 download_yahoo(symbol, value, key, file_path)             
         except Exception as e:
-           # traceback.print_exc()
+            traceback.print_exc()
             logger.error(f"Error downloading data for {symbol_code},{key}: {e}")
     
 
@@ -58,29 +58,26 @@ def download_1d(session, symbol_code:str, file_path:str):
                     time.sleep(2)
 
 def download_yahoo(symbol:Symbol, period, interval, file_path):
-    ticker = Ticker(symbol.symbol, asynchronous=True, backoff_factor=1, max_workers=1, retry=5, timeout = 10)
+    ticker = Ticker(symbol.symbol)
+    time.sleep(1)  # Add a delay of 1 second between requests
     df = ticker.history(period=period, interval=interval)
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
         return
+    # print(df)
     df.rename(columns={'close': 'Close', 'open': 'Open', 'volume': 'Volume', 'high': 'High', 'low': 'Low'}, inplace=True)
     df['Date'] = df.index.get_level_values('date')
     if 'adjclose' in df:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'adjclose', 'Volume']
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
-    if interval != '1d' and os.path.isfile(file_path):     
+    df['Volume'] = df['Volume'].astype(int)
+    
+    if interval != '1d' and  interval != '1m'  and os.path.isfile(file_path):     
         existing_data = None
-        # if interval == '1d':
-        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
-        # else:
-        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col)  
         existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
         existing_data.index = pd.to_datetime(existing_data.index,  utc= True, errors='coerce')
-        # print(existing_data.index)
-        # print(existing_data.dtypes)
-        # existing_data.index = existing_data.index.tz_convert('America/New_York')
-
+        
         if isinstance(existing_data.index, pd.DatetimeIndex):
             existing_data.index = existing_data.index.tz_localize(None)  # Remove timezone if present
             existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
@@ -98,13 +95,17 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         # Sort the DataFrame by the index
         merged_data = merged_data.sort_index()
         merged_data = merged_data[~merged_data.index.duplicated(keep='last')]
-        if interval == '1d':
-            merged_data.index = merged_data.index.tz_localize(None).to_period('D')  # 去除时区信息
+       
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
         if interval == '1d':
-            df['Date'] = pd.to_datetime(df.index.get_level_values('date')).strftime('%Y-%m-%d')
+            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).tz_localize('UTC')
+            # Convert to a string
+            df[index_col] = df[index_col].dt.strftime('%Y-%m-%d')
+        df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
+        logger.info(df)
+        print(file_path)
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
@@ -113,18 +114,18 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    if symbol.symbol != 'A':
+    if symbol.symbol != 'CARG':
         return False
     # 如果价格小于10元则暂时不用下载
-    if symbol.last_price < 3 or symbol.last_price > 500:
+    if symbol.last_price < 1 or symbol.last_price > 50:
         return False
     
     # 成交量小于50万股的也不需要
-    if symbol.volume and symbol.volume < 50 * 10000:
+    if symbol.volume and symbol.volume < 25 * 10000:
             return False
         
         # 如果市值小于10元则暂时不用下载
-    if symbol.market_cap is None or symbol.market_cap < 2500 * 10000:
+    if symbol.market_cap is None or symbol.market_cap < 500 * 10000:
         return False
     if os.path.exists(file_path):
         # Get the file's last modification time
@@ -153,7 +154,8 @@ def filter_stocks(symbols):
 
     return filtered_symbols
 
-def main():
+
+if __name__ == "__main__":
     database.global_init("edge.db")
     # Create the full path for the download file in the current directory
     download_path = os.path.join(os.getcwd(), 'historical_data')
@@ -176,7 +178,3 @@ def main():
         concurrent.futures.wait(futures)
 
     logger.info("All downloads completed.")
-    
-
-if __name__ == "__main__":
-    main()

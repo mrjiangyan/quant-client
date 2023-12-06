@@ -10,7 +10,7 @@ from loguru import logger
 import traceback
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 100
+max_concurrent_downloads = 25
 
 file_expire_seconds = 3 * 3600
 
@@ -30,11 +30,11 @@ def download_data(symbol:Symbol, root_path):
             if should_download(symbol, file_path):
                 download_yahoo(symbol, value, key, file_path)             
         except Exception as e:
-            traceback.print_exc()
+            # traceback.print_exc()
             logger.error(f"Error downloading data for {symbol_code},{key}: {e}")
     
 def download_yahoo(symbol:Symbol, period, interval, file_path):
-    ticker = Ticker(symbol.symbol, asynchronous=True, backoff_factor=1, max_workers=1, retry=5, timeout = 10)
+    ticker = Ticker(symbol.symbol, asynchronous=True)
     df = ticker.history(period=period, interval=interval)
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
@@ -46,18 +46,11 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     # print(df)
-    if interval != '1d' and os.path.isfile(file_path):     
+    if interval != '1d' and  interval != '1m'  and os.path.isfile(file_path):     
         existing_data = None
-        # if interval == '1d':
-        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col, date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
-        # else:
-        #     existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col)  
         existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
         existing_data.index = pd.to_datetime(existing_data.index,  utc= True, errors='coerce')
-        # print(existing_data.index)
-        # print(existing_data.dtypes)
-        # existing_data.index = existing_data.index.tz_convert('America/New_York')
-
+       
         if isinstance(existing_data.index, pd.DatetimeIndex):
             existing_data.index = existing_data.index.tz_localize(None)  # Remove timezone if present
             existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
@@ -75,13 +68,13 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         # Sort the DataFrame by the index
         merged_data = merged_data.sort_index()
         merged_data = merged_data[~merged_data.index.duplicated(keep='last')]
-        if interval == '1d':
-            merged_data.index = merged_data.index.tz_localize(None).to_period('D')  # 去除时区信息
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
         if interval == '1d':
-            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).strftime('%Y-%m-%d')
+            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).tz_localize('UTC')
+            # Convert to a string
+            df[index_col] = df[index_col].dt.strftime('%Y-%m-%d')
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     
@@ -94,7 +87,7 @@ def should_download(symbol:Symbol, file_path:str):
     if symbol.last_price < 1:
         download = False
     # 如果市值小于10元则暂时不用下载
-    if symbol.market_cap is None or symbol.market_cap < 2500 * 10000:
+    if symbol.market_cap is None or symbol.market_cap < 500 * 10000:
         download = False
     # 如果文件已经存在则忽略上述的条件 无论如何都会根据文件修改时间的处理逻辑做判断
     if os.path.exists(file_path):

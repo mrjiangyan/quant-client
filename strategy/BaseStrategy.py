@@ -12,7 +12,7 @@ class BaseStrategy(bt.Strategy):
     )
     
     def check_allow_sell_or_buy(self):
-        if self.params.start_date and  self.params.end_date:
+        if self.params.start_date() and  self.params.end_date():
             current_date = self.data.datetime.date(0)
             return self.params.start_date() <= current_date <= self.params.end_date()
         return True
@@ -38,7 +38,7 @@ class BaseStrategy(bt.Strategy):
         self.buy(size=size)
         self.log('买入日期: %s, 开盘价: %.2f, 最高价: %.2f, 最低价: %.2f, 收盘价: %.2f, 交易量: %.2f' %
                     (date.strftime('%Y-%m-%d %H:%M'), open_price, high_price, low_price, close_price, volume))
-        self.log(f"买入完成: 价格 {self.data.close[0]},数量 {size},总金额:{self.data.close[0]*size}")
+        self.log(f"买入完成: 价格 {self.data.close[0]:.2f},数量 {size:.0f},总金额:{self.data.close[0]*size}")
         return True
         
     def internal_sell(self):
@@ -59,8 +59,8 @@ class BaseStrategy(bt.Strategy):
         volume = self.datas[0].volume[0]
         self.log('卖出日期: %s, 开盘价: %.2f, 最高价: %.2f, 最低价: %.2f, 收盘价: %.2f, 交易量: %.2f' %
                     (date.strftime('%Y-%m-%d %H:%M'), open_price, high_price, low_price, close_price, volume))
-        self.log(f"卖出完成: 价格 {self.data.close[0]},数量 {self.position.size}")
-        
+        self.log(f"卖出完成: 价格 {self.data.close[0]:.2f},数量 {self.position.size:.0f}")
+        return True
     # def notify_order(self, order):
     #     if order.status in [order.Submitted, order.Accepted]:
     #         return
