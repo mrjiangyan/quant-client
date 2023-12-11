@@ -1,8 +1,10 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
-from datetime import datetime
 
 class BaseStrategy(bt.Strategy):
+    def __init__(self):
+        self.name = None  # 父类中定义的属性
+        
     params = (
         ("symbol", ''),
         ("start_date", None),
@@ -77,7 +79,7 @@ class BaseStrategy(bt.Strategy):
         
         if self.params.log_file_path:
             with open(self.params.log_file_path, 'a') as f:
-                f.write(f"{'%s, %s' % (dt.isoformat(), txt)}\n")
+                f.write(f"{dt.isoformat()}, {self.name}, {txt}\n")
 
 
     def notify_trade(self, trade):

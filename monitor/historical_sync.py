@@ -12,10 +12,10 @@ import traceback
 # Limit the number of symbols to download concurrently
 max_concurrent_downloads = 25
 
-file_expire_seconds = 3 * 3600
+file_expire_seconds = 6 * 3600
 
 index_col = 'Date'
-interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": 'ytd', "60m": 'ytd' }
+interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd' }
 
 
 # Function to download historical data for a symbol

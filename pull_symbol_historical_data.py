@@ -13,10 +13,10 @@ import traceback
 # Limit the number of symbols to download concurrently
 max_concurrent_downloads = 100
 
-file_expire_seconds = 1 * 60
+file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
-interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '30m': '1mo', "1h": 'ytd', "60m": 'ytd' }
-interval_map = { "1d": 'max' ,'1m': '7d',"1h": 'ytd'}
+interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
+interval_map = { "1d": 'max' ,'1m': '7d', "1h": 'ytd','1wk': 'max'}
 
 
 # Function to download historical data for a symbol
@@ -114,8 +114,8 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    if symbol.symbol != 'CARG':
-        return False
+    # if symbol.symbol != 'CARG':
+    #     return False
     # 如果价格小于10元则暂时不用下载
     if symbol.last_price < 1 or symbol.last_price > 50:
         return False

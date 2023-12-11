@@ -5,10 +5,7 @@ import backtrader as bt
 #macd趋势分析
 class MacdTrendStrategy(BaseStrategy):
     params = (
-        ("macd_short", 12),
-        ("macd_long", 26),
-        ("macd_signal", 9),
-        ("macd_level", -0.5),
+        ("macd_level", -0.3),
         ('oversold_threshold', 20),
         ("period", 9),
         ("k_period", 3),
@@ -17,6 +14,8 @@ class MacdTrendStrategy(BaseStrategy):
     )
 
     def __init__(self):
+        super().__init__()  # 调用父类的构造函数
+        self.name = '底部MACD金叉趋势预判策略'
         # Define the MACD indicator
         self.macd = bt.indicators.MACD()
         
@@ -43,7 +42,7 @@ class MacdTrendStrategy(BaseStrategy):
         # Check if dif is rising for three consecutive days and other conditions
         if (current_diff > self.macd.macd[-2] and current_diff < self.params.macd_level and 
                 current_diff <  current_dea
-                and  self.J[0] < self.params.oversold_threshold
+                and self.J[0] < self.params.oversold_threshold
                 ):
             # MACD line crossed above the signal line (Golden Cross) - Generate buy signal
             if self.internal_buy() == True:

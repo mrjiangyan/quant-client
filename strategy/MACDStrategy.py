@@ -11,10 +11,12 @@ class MACDStrategy(BaseStrategy):
         ("k_period", 3),
         ("d_period", 3),
         ('overbought_threshold', 80),
-        ('oversold_threshold', 20),
+        ('oversold_threshold', 40),
     )
 
     def __init__(self):
+        super().__init__()  # 调用父类的构造函数
+        self.name = '底部MACD金叉与kdj底部策略'
          # Add your MACD indicator here
         self.macd = bt.indicators.MACD()
 
@@ -48,7 +50,7 @@ class MACDStrategy(BaseStrategy):
         # MACD出现日线的金叉，但是
         buy_signal = (self.macd.macd[0] > self.macd.signal[0] and 
                       self.macd.macd[-1] <= self.macd.signal[-1] and
-                    #   self.macd.macd[0] < self.params.macd_level and self.macd.signal[0] < self.params.macd_level and
+                      self.macd.macd[0] < self.params.macd_level and self.macd.signal[0] < self.params.macd_level and
                        self.J[0] < self.params.oversold_threshold
                       )
         

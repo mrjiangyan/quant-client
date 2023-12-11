@@ -10,7 +10,7 @@ database.global_init("edge.db")
 
 url = "blob:https://www.nasdaq.com/a57045f7-ec5e-4f27-9502-0bf84d305728"
 
-local_path = "nasdaq_screener_1701824629687.csv"
+local_path = "nasdaq_screener_1702257238390.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
