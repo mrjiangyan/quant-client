@@ -1,5 +1,5 @@
 from .BaseStrategy import BaseStrategy
-from .MACDStrategy import MACDStrategy
+from .MacdStrategy import MacdStrategy
 from .MacdCrossStrategy import MacdCrossStrategy
 from .BollingerStrategy import BollingerStrategy
 from .MacdTrendStrategy import MacdTrendStrategy

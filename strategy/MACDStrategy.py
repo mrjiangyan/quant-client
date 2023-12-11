@@ -1,10 +1,9 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 from .BaseStrategy import BaseStrategy
-from loguru import logger
 
 
-class MACDStrategy(BaseStrategy):
+class MacdStrategy(BaseStrategy):
     params = (
         ("macd_level", -0.5),
         ("period", 9),

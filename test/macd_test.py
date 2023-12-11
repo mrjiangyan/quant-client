@@ -36,7 +36,7 @@ def run_strategy(symbol: Symbol, period:str):
         if allow_cerebro(symbol, period) == False:
             return symbol, None
         # Create cerebro instance for each symbol
-        print(symbol.symbol)
+        
         datapath = os.path.join(current_working_directory, f'historical_data/{period}/{symbol.symbol}.csv')
         if not os.path.exists(datapath):
             return symbol.symbol, None
@@ -45,21 +45,24 @@ def run_strategy(symbol: Symbol, period:str):
            
         if existing_data is None or existing_data.empty:
             return symbol , None
+        
         existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
                 .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
                 .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
         
         if len(existing_data) < 50:
                 return symbol , None
+        print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
         
-        enums = enumerate([Strategy.MACDStrategy, Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy])
+        enums = enumerate([Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy,Strategy.MacdStrategy])
         # enums = enumerate([Strategy.MacdDoubleBottomStrategy])
         # enums = enumerate([Strategy.BollingerStrategy, Strategy.MACDStrategy, Strategy.MacdCrossStrategy])
-        for strategy_cls in enums:
+        for i, strategy_cls in enums:
              # 创建策略实例
             cerebro = bt.Cerebro()
           
+            print(strategy_cls.__name__)
             # 创建日志文件路径
             log_file_path = os.path.join(output_path, f'{symbol.symbol}-{strategy_cls.__name__}.log')
             
