@@ -12,7 +12,7 @@ import traceback
 import argparse
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 100
+max_concurrent_downloads = 200
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
@@ -43,13 +43,14 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
         return
-    # print(df)
     df.rename(columns={'close': 'Close', 'open': 'Open', 'volume': 'Volume', 'high': 'High', 'low': 'Low'}, inplace=True)
     df['Date'] = df.index.get_level_values('date')
     if 'adjclose' in df:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'adjclose', 'Volume']
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
+    
+    # print(df)
     df['Volume'] = df['Volume'].astype(int)
     
     if interval != '1d' and  interval != '1m'  and os.path.isfile(file_path):     
@@ -78,11 +79,10 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
-        logger.info(df)
+        print(df)
         if interval == '1d':
             df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('America/New_York').dt.strftime('%Y-%m-%d')
-            print(df)
-        df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
+        # df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
        
         print(file_path)
         df.to_csv(file_path, index=False, columns=columns_to_save)
@@ -96,16 +96,16 @@ def should_download(symbol:Symbol, file_path:str):
     # if symbol.symbol != 'CCCC':
     #     return False
     # 如果价格小于10元则暂时不用下载
-    if symbol.last_price < 1 or symbol.last_price > 50:
-        return False
+    # if symbol.last_price < 1 or symbol.last_price > 50:
+    #     return False
     
     # 成交量小于50万股的也不需要
-    if symbol.volume and symbol.volume < 25 * 10000:
-            return False
+    # if symbol.volume and symbol.volume < 25 * 10000:
+    #         return False
         
         # 如果市值小于10元则暂时不用下载
-    if symbol.market_cap is None or symbol.market_cap < 500 * 10000:
-        return False
+    # if symbol.market_cap is None or symbol.market_cap < 500 * 10000:
+    #     return False
     if os.path.exists(file_path):
         # Get the file's last modification time
         last_modified_time = os.path.getmtime(file_path)
@@ -119,19 +119,6 @@ def should_download(symbol:Symbol, file_path:str):
     else:
         return True
 
-def filter_stocks(symbols):
-    filtered_symbols = []
-
-    for symbol in symbols:
-        # Assuming you have attributes like 'price', 'market_cap', and 'volume' for each symbol
-        if (
-            symbol.last_price >= 1 and
-            symbol.market_cap and symbol.market_cap >= 50000000 and
-            symbol.volume >= 500000
-        ):
-            filtered_symbols.append(symbol)
-
-    return filtered_symbols
 
 
 if __name__ == "__main__":
