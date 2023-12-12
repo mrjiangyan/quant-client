@@ -2,13 +2,14 @@ import os
 import time
 import requests
 import concurrent.futures
-from data.service.symbol_service import getAll
+from data.service.symbol_service import getAll, get_by_symbol
 from data import database
 from data.model.t_symbol import Symbol
 import pandas as pd
 from yahooquery import Ticker
 from loguru import logger
 import traceback
+import argparse
 
 # Limit the number of symbols to download concurrently
 max_concurrent_downloads = 100
@@ -34,28 +35,6 @@ def download_data(symbol:Symbol, root_path):
             traceback.print_exc()
             logger.error(f"Error downloading data for {symbol_code},{key}: {e}")
     
-
-def download_1d(session, symbol_code:str, file_path:str):
-    headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Cookie": "visitor-id=3437278853490150000V10; data-mn=3437278863490106000V10~~1; data-opx=a89cb73c-8eb3-48a9-9770-265531f9d712~~1; data-pub=35BE2056-0984-44DE-BA6B-AE30EA464B8B~~1; usp_status=1; data-zta=1991787319451354786~~63; data-gum=a_d00541f7-125b-469f-b65e-e0ed30ae7521~~63; data-crt=k-VRgzbl01CzWuWmvh4xaAIV3UnafZAyPOAqq74A~~63; data-mag=LPC1ZAU0-1I-2DUB~~63; data-ylm=3FVZGxxfZZxbwEH36nT3~~63; data-sht=1901683f-118b-43e4-b11a-cdb84ee7b9b5~~63",
-            # 添加其他自定义的请求头...
-    }
-    url = f"https://query1.finance.yahoo.com/v7/finance/download/{symbol_code}?period1=1277769600&period2={int(time.time())}&interval=1d&events=history&includeAdjustedClose=true"
-
-    for attempt in range(max_retries):
-        try:
-            response = session.get(url, headers=headers, timeout=30)
-            response.raise_for_status()
-            with open(file_path, "wb") as file:
-                file.write(response.content)
-                print(f"文件下载成功并保存为 {file_path}")
-                break
-        except requests.RequestException as e:
-                print(f"Error on attempt {attempt + 1}: {e}")
-                if attempt < max_retries - 1:
-                    # Sleep or add other logic for backoff before retrying
-                    time.sleep(2)
 
 def download_yahoo(symbol:Symbol, period, interval, file_path):
     ticker = Ticker(symbol.symbol)
@@ -99,12 +78,12 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
-        if interval == '1d':
-            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).tz_localize('UTC')
-            # Convert to a string
-            df[index_col] = df[index_col].dt.strftime('%Y-%m-%d')
-        df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
         logger.info(df)
+        if interval == '1d':
+            df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('America/New_York').dt.strftime('%Y-%m-%d')
+            print(df)
+        df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
+       
         print(file_path)
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
@@ -114,7 +93,7 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    # if symbol.symbol != 'CARG':
+    # if symbol.symbol != 'CCCC':
     #     return False
     # 如果价格小于10元则暂时不用下载
     if symbol.last_price < 1 or symbol.last_price > 50:
@@ -162,13 +141,18 @@ if __name__ == "__main__":
     # Create the directory if it doesn't exist
     os.makedirs(download_path, exist_ok=True)
 
+    parser = argparse.ArgumentParser(description='Backtest trading strategies on historical data.')
+    parser.add_argument('--symbol', nargs='+', help='指定的证券代码')
+    
+    args = parser.parse_args()
     symbols = []
     # Get all symbols
     with database.create_session() as db_sess:
-        symbols = getAll(db_sess)
+        if args.symbol:
+            symbols = [get_by_symbol(db_sess, s, "US") for s in args.symbol]
+        else:
+            symbols = getAll(db_sess)
       
-    # symbols = filter_stocks(symbols)  
-    
     # Use ThreadPoolExecutor to download data concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers= max_concurrent_downloads) as executor:
         # Submit download tasks

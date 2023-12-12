@@ -6,7 +6,7 @@ import backtrader as bt
 class MacdTrendStrategy(BaseStrategy):
     params = (
         ("macd_level", -0.3),
-        ('oversold_threshold', 20),
+        ('oversold_threshold', 30),
         ("period", 9),
         ("k_period", 3),
         ("d_period", 3),

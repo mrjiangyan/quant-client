@@ -55,14 +55,13 @@ def run_strategy(symbol: Symbol, period:str):
         print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
         
-        enums = enumerate([Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy,Strategy.MacdStrategy])
+        enums = enumerate([Strategy.BollingerStrategy, Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy,Strategy.MacdStrategy])
         # enums = enumerate([Strategy.MacdDoubleBottomStrategy])
         # enums = enumerate([Strategy.BollingerStrategy, Strategy.MACDStrategy, Strategy.MacdCrossStrategy])
         for i, strategy_cls in enums:
              # 创建策略实例
             cerebro = bt.Cerebro()
           
-            print(strategy_cls.__name__)
             # 创建日志文件路径
             log_file_path = os.path.join(output_path, f'{symbol.symbol}-{strategy_cls.__name__}.log')
             
