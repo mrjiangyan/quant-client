@@ -21,11 +21,11 @@ current_working_directory = os.getcwd()
 days = 5
 
 def allow_cerebro(symbol:Symbol, period:str ):
-    if not (2.5 < symbol.last_price < 50):
+    if not (1 < symbol.last_price < 200):
         return False
     
     # 成交量小于50万股的就不考虑
-    if period == '1d' and symbol.volume < 50 * 10000:
+    if period == '1d' and symbol.volume < 10 * 10000:
         return False
      # 股票数量小于250万股的就不考虑
     if symbol.market_cap is None or symbol.market_cap/symbol.last_price < 250 * 10000:
@@ -56,7 +56,7 @@ def run_strategy(symbol: Symbol, period:str):
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
         
         enums = enumerate([Strategy.BollingerStrategy, Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy,Strategy.MacdStrategy])
-        # enums = enumerate([Strategy.MacdDoubleBottomStrategy])
+        enums = enumerate([Strategy.BollingerStrategy])
         # enums = enumerate([Strategy.BollingerStrategy, Strategy.MACDStrategy, Strategy.MacdCrossStrategy])
         for i, strategy_cls in enums:
              # 创建策略实例
@@ -82,7 +82,7 @@ def run_strategy(symbol: Symbol, period:str):
             
             if os.path.exists(log_file_path):
                     with open(log_file_path, 'a') as f:
-                        f.write(f"Final Portfolio Value: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}")
+                        f.write(f"收益总额: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}")
           
        
         
@@ -96,9 +96,6 @@ def run_strategy(symbol: Symbol, period:str):
     return symbol, cerebro.broker.getvalue()
 
 def analyze_returns(symbol_returns):
-    total_returns = 0
-    return_count = 0
-
     # Dictionary to store individual returns for each symbol
     symbol_individual_returns = {}
 
@@ -106,49 +103,40 @@ def analyze_returns(symbol_returns):
         if isinstance(returns, Exception):
             print(f"Exception occurred for symbol {symbol.symbol}: {returns}")
             # Handle the exception as needed
-        elif returns == 1000.0:
-            continue
-        else:
-            revenue = returns-1000
-            total_returns += revenue
-            return_count += 1
-            symbol_individual_returns[symbol] = revenue
+        elif returns != 1000.0:
+            revenue = returns - 1000
+            symbol_individual_returns[symbol.symbol] = revenue
 
-    # Calculate average return
-    average_return = total_returns / return_count if return_count > 0 else 0
+    # 对 symbol_individual_returns 字典按照值进行排序
+    sorted_returns = sorted(symbol_individual_returns.items(), key=lambda x: x[1], reverse=True)
 
     
-    print("\n收益分布:")
-    intervals = {}
-    for symbol, individual_return in symbol_individual_returns.items():
-        if individual_return < 0:
-            intervals.setdefault(-10, []).append(symbol.symbol)
-        else:
-            interval_key = int(individual_return / 1000) 
-            intervals.setdefault(interval_key, []).append(symbol.symbol)
-
-    for interval, symbols_in_interval in intervals.items():
-        print(f"{interval}% - {interval + 10}%: {len(symbols_in_interval)} symbols ({', '.join(symbols_in_interval)})")
-
-    print(f"\n交易symbol总数: {return_count}")
-    print(f"Average Revenue: {average_return:.2f}")
-
+    log_file_path = os.path.join(output_path, f'summary.log')
+    with open(log_file_path, 'a') as f:
+        print("\n每个Symbol的收益金额:")
+        for symbol, individual_return in sorted_returns:
+            content= f"{symbol}: {individual_return:.2f}"
+            print(content)
+            f.write(content)
+                   
+          
 
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser(description='Backtest trading strategies on historical data.')
-    parser.add_argument('--symbol', nargs='+', help='指定的证券代码')
-    parser.add_argument('--macd_level', nargs='+', help='设置买入点要求的macd等级')
-    parser.add_argument('--period', nargs='+', help='设置k线数据类型')
-    parser.add_argument('--days', nargs='+', help='设置k线数据类型')
-    args = parser.parse_args()
 
-    period = '1d';
-    if args.period:
-        period = args.period[0]
-        
-    if args.days:
-        days = int(args.days[0])
+    input_symbol = None
+    input_symbol = input(f"请输入需要回测的证券代码以空格分割（默认为全部）: ") or input_symbol
+
+    # default_macd_level = '2'
+    # macd_level = input(f"请输入买入点要求的macd等级（默认为 {default_macd_level}）: ") or default_macd_level
+
+    period = '1d'
+    period = input(f"请输入K线数据类型（默认为 {period}）: ") or period
+
+    default_days = 5
+    default_days = input(f"请输入回测的天数（默认为 {days}）: ") or default_days
+
+    days = int(default_days)
         
     output_path = os.path.join(current_working_directory, 'output', f'MACD-{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
 
@@ -161,12 +149,11 @@ if __name__ == '__main__':
     symbols = []
     # Get all symbols
     with database.create_session() as db_sess:
-        if args.symbol:
-            symbols = [get_by_symbol(db_sess, s, "US") for s in args.symbol]
+        if input_symbol:
+            symbols = [get_by_symbol(db_sess, s, "US") for s in input_symbol.split(' ')]
         else:
             symbols = getAll(db_sess)
       
-   
     current_datetime = datetime.now()
     
     start_datetime = datetime.now() - timedelta(days=days)

@@ -49,7 +49,6 @@ element.click()
 # 等待下载完成（示例中使用10秒的等待时间，可以根据实际情况调整）
 #wait.until(EC.invisibility_of_element_located((By.XPATH, "//button[@class='nasdaq-screener__form-button--download ns-download-1']")))
 wait = WebDriverWait(browser, 30)
-# wait.until(EC.invisibility_of_element_located((By.XPATH, "//button[@class='nasdaq-screener__form-button--download ns-download-1']")))
 
 # 关闭浏览器
 browser.quit()

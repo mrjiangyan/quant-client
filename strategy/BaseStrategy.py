@@ -2,16 +2,40 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import backtrader as bt
 
 class BaseStrategy(bt.Strategy):
-    def __init__(self):
-        self.name = None  # 父类中定义的属性
-        
     params = (
         ("symbol", ''),
         ("start_date", None),
         ("end_date", None),
         ("percent_of_cash", 0.6),
-        ("log_file_path", None)
+        ("log_file_path", None),
+        ("period", 9),
+        ("k_period", 3),
+        ("d_period", 3),
     )
+     
+    def __init__(self):
+        self.name = None  # 父类中定义的属性
+          # Add your MACD indicator here
+        self.macd = bt.indicators.MACD()
+
+        # Add Bollinger Bands
+        self.bollinger = bt.indicators.BollingerBands()
+        
+        self.high_nine = bt.indicators.Highest(self.data.high, period=self.params.period)
+        # 9个交易日内最低价
+        self.low_nine = bt.indicators.Lowest(self.data.low, period=self.params.period)
+        # 计算rsv值
+        self.rsv = 100 * bt.DivByZero(
+            self.data_close - self.low_nine, self.high_nine - self.low_nine, zero=None
+        )
+        # 计算rsv的3周期加权平均值，即K值
+        self.K = bt.indicators.EMA(self.rsv, period=self.params.k_period, plot=False)
+        # D值=K值的3周期加权平均值
+        self.D = bt.indicators.EMA(self.K, period=self.params.d_period, plot=False)
+        # J=3*K-2*D
+        self.J = 3 * self.K - 2 * self.D
+        
+   
     
     def check_allow_sell_or_buy(self):
         if self.params.start_date() and  self.params.end_date():
@@ -86,6 +110,6 @@ class BaseStrategy(bt.Strategy):
         if not trade.isclosed:
             return
 
-        self.log(f'交易盈亏: 毛盈亏 {trade.pnl}, 净盈亏 {trade.pnlcomm}')
+        # self.log(f'交易盈亏: 毛盈亏 {trade.pnl}, 净盈亏 {trade.pnlcomm}')
 
         

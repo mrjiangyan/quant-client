@@ -17,7 +17,7 @@ max_concurrent_downloads = 200
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
-interval_map = { "1d": 'max' ,'1m': '7d', "1h": 'ytd','1wk': 'max'}
+interval_map = { "1d": 'max' , "1h": 'ytd','1wk': 'max'}
 
 
 # Function to download historical data for a symbol

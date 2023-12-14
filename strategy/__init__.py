@@ -4,3 +4,4 @@ from .MacdCrossStrategy import MacdCrossStrategy
 from .BollingerStrategy import BollingerStrategy
 from .MacdTrendStrategy import MacdTrendStrategy
 from .MacdDoubleBottomStrategy import MacdDoubleBottomStrategy
+from .ContinuousDeclineOpportunityStrategy import ContinuousDeclineOpportunityStrategy
