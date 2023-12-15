@@ -8,28 +8,44 @@ import backtrader as bt
 from data.service.symbol_service import getAll, get_by_symbol
 from datetime import datetime, timedelta
 from data.model.t_symbol import Symbol
-import argparse
-
 from data import database 
 import concurrent.futures
 import traceback
 from loguru import logger
-import strategy as Strategy
+import importlib
+import inspect
 
 
 current_working_directory = os.getcwd()
+
+cash = 100000.0
 days = 5
+# 示例：假设策略类定义在名为 "strategies" 的模块中
+module_name = "strategy"
+
+selected_strategies = []
+
+output_path = ''
+
+def get_all_classes(module_name):
+    module = importlib.import_module(module_name)
+    all_classes = [obj[1] for obj in inspect.getmembers(module, inspect.isclass) if issubclass(obj[1], object) and obj[1] is not object]
+    return all_classes
+
+
+all_strategies = get_all_classes(module_name)
 
 def allow_cerebro(symbol:Symbol, period:str ):
     if not (1 < symbol.last_price < 200):
         return False
     
     # 成交量小于50万股的就不考虑
-    if period == '1d' and symbol.volume < 10 * 10000:
-        return False
+    # if period == '1d' and symbol.volume < 10 * 10000:
+    #     return False
      # 股票数量小于250万股的就不考虑
-    if symbol.market_cap is None or symbol.market_cap/symbol.last_price < 250 * 10000:
-        return False
+    # if symbol.market_cap is None or symbol.market_cap/symbol.last_price < 250 * 10000:
+    #     return False
+    return True
 
 def run_strategy(symbol: Symbol, period:str):
     try:
@@ -46,80 +62,107 @@ def run_strategy(symbol: Symbol, period:str):
         if existing_data is None or existing_data.empty:
             return symbol , None
         
-        existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
-                .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
-                .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
-        
+        # existing_data['Open'] = existing_data['Open'].replace(0, 0.01)
+        # existing_data['Close'] = existing_data['Close'].replace(0, 0.01)
+        # existing_data['High'] = existing_data['High'].replace(0, 0.01)
+        # existing_data['Low'] = existing_data['Low'].replace(0, 0.01)
+        # existing_data['Volume'] = existing_data['Volume'].replace(0, 1)
+        # existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
+        #         .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
+        #         .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
+
         if len(existing_data) < 50:
                 return symbol , None
         print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
+
+        enums = enumerate(selected_strategies)
         
-        enums = enumerate([Strategy.BollingerStrategy, Strategy.MacdTrendStrategy, Strategy.MacdDoubleBottomStrategy,Strategy.MacdStrategy])
-        enums = enumerate([Strategy.BollingerStrategy])
-        # enums = enumerate([Strategy.BollingerStrategy, Strategy.MACDStrategy, Strategy.MacdCrossStrategy])
+       
+       
         for i, strategy_cls in enums:
-             # 创建策略实例
-            cerebro = bt.Cerebro()
-          
+           
             # 创建日志文件路径
-            log_file_path = os.path.join(output_path, f'{symbol.symbol}-{strategy_cls.__name__}.log')
+            log_file_path = os.path.join(output_path, f'{symbol.symbol}.log')
             
+            # 创建策略实例
+            cerebro = bt.Cerebro(stdstats = False, maxcpus =None)
+            # cerebro = bt.Cerebro()
             # 将策略实例添加到Cerebro中
             cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
+            cerebro.broker = bt.brokers.BackBroker(cash=cash)
+            cerebro.broker.setcommission(commission=0.001) 
               # Create data source
             data = bt.feeds.PandasData(dataname=existing_data)
             cerebro.adddata(data)
-
-            cerebro.broker.setcommission(commission=0.0001)  # Assuming 0.1% commission on each trade
-            cerebro.broker.set_slippage_fixed(fixed=0.01)  # Assuming 0.01 price slippage on each trade
-            cerebro.broker.setcash(1000.0)  # Set initial cash
             # 运行策略
-            cerebro.run()
-
+            cerebro.run(tradehistory = True)
             # 获取统计信息
             ret = cerebro.broker.getvalue() / cerebro.broker.startingcash - 1
             
             if os.path.exists(log_file_path):
-                    with open(log_file_path, 'a') as f:
-                        f.write(f"收益总额: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}")
+                with open(log_file_path, 'a') as f:
+                    f.write(f"账户总值: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}\n")
           
-       
-        
-        # Plot the result
-        #cerebro.plot(style='bar')
-        # Return the final portfolio value
     except Exception as e:
         traceback.print_exc()
         logger.error(symbol.symbol)
         return symbol, e
     return symbol, cerebro.broker.getvalue()
 
+    
 def analyze_returns(symbol_returns):
     # Dictionary to store individual returns for each symbol
     symbol_individual_returns = {}
-
-    for symbol, returns in symbol_returns.items():
-        if isinstance(returns, Exception):
-            print(f"Exception occurred for symbol {symbol.symbol}: {returns}")
-            # Handle the exception as needed
-        elif returns != 1000.0:
-            revenue = returns - 1000
-            symbol_individual_returns[symbol.symbol] = revenue
+    log_file_path = os.path.join(output_path, f'summary.log')
+    
+    print(log_file_path)
+    with open(log_file_path, 'a') as f:
+        for symbol, returns in symbol_returns.items():
+            if isinstance(returns, Exception):
+                print(f"Exception occurred for symbol {symbol.symbol}: {returns}")
+                f.write(f"Exception occurred for symbol {symbol.symbol}: {returns}")
+                f.write('\n')
+                # Handle the exception as needed
+            elif returns != cash:
+                revenue = returns - cash
+                symbol_individual_returns[symbol.symbol] = revenue
 
     # 对 symbol_individual_returns 字典按照值进行排序
     sorted_returns = sorted(symbol_individual_returns.items(), key=lambda x: x[1], reverse=True)
-
-    
-    log_file_path = os.path.join(output_path, f'summary.log')
+   
+    symbols = ''
     with open(log_file_path, 'a') as f:
+        
         print("\n每个Symbol的收益金额:")
         for symbol, individual_return in sorted_returns:
+            symbols += f"{symbol} "
             content= f"{symbol}: {individual_return:.2f}"
             print(content)
             f.write(content)
+            f.write('\n')
+        f.write(symbols)
+        f.write('\n')
                    
-          
+def select_strategy():
+    for i, strategy in enumerate(all_strategies):
+        print(f"{i + 1}. {strategy.__name__}")
+
+    while True:
+        user_input = input("请输入要运行的策略编号（输入exit结束选择）: ")
+        if user_input.lower() == 'exit':
+            break
+        elif user_input.isdigit():
+            index = int(user_input) - 1
+            if 0 <= index < len(all_strategies):
+                selected_indexes.append(index)
+                print(f"已选择运行策略: {all_strategies[index].__name__}")
+                break
+            else:
+                print("无效的策略编号，请重新输入")
+        else:
+            print("无效的输入，请输入数字或exit")
+
 
 if __name__ == '__main__':
     
@@ -137,13 +180,17 @@ if __name__ == '__main__':
     default_days = input(f"请输入回测的天数（默认为 {days}）: ") or default_days
 
     days = int(default_days)
-        
-    output_path = os.path.join(current_working_directory, 'output', f'MACD-{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
+
+    selected_indexes = []
+    select_strategy()
+
+    selected_strategies = [cls for idx, cls in enumerate(all_strategies) if idx in selected_indexes]
+    
+    output_path = os.path.join(current_working_directory, 'output', selected_strategies[0].__name__,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
 
     if not os.path.exists(output_path):
         # 不存在则创建
         os.makedirs(output_path)
-    
     database.global_init("edge.db")
  
     symbols = []
@@ -159,11 +206,13 @@ if __name__ == '__main__':
     start_datetime = datetime.now() - timedelta(days=days)
 
     symbol_returns = {}
+    
+    symbols = [symbol for symbol in symbols if symbol is not None]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers= 400) as executor:
         futures = [executor.submit(run_strategy, symbol, period ) for symbol in symbols]
 
-        # Iterate over completed futures
         for future in concurrent.futures.as_completed(futures):
             symbol, result_or_exception = future.result()
 

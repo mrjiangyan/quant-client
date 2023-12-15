@@ -30,12 +30,7 @@ class BollingerStrategy(BaseStrategy):
                 return i
         return None
       
-    def calculate_profit_percentage(self):
-        if self.position:
-            buy_price = self.position.price
-            current_price = self.data.close[0]
-            return (current_price - buy_price) / buy_price
-        return 0.0
+   
     
     def has_consecutive_down_days(self):
         self.consecutive_down_days = 0

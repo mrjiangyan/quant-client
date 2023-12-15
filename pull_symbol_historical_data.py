@@ -1,6 +1,7 @@
 import os
 import time
-import requests
+from datetime import datetime, timedelta,time
+
 import concurrent.futures
 from data.service.symbol_service import getAll, get_by_symbol
 from data import database
@@ -18,6 +19,7 @@ file_expire_seconds = 6 * 60 * 60
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
 interval_map = { "1d": 'max' , "1h": 'ytd','1wk': 'max'}
+interval_map = { "1d": 'max' }
 
 
 # Function to download historical data for a symbol
@@ -38,7 +40,6 @@ def download_data(symbol:Symbol, root_path):
 
 def download_yahoo(symbol:Symbol, period, interval, file_path):
     ticker = Ticker(symbol.symbol)
-    time.sleep(1)  # Add a delay of 1 second between requests
     df = ticker.history(period=period, interval=interval)
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
@@ -93,24 +94,14 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
          
-    # if symbol.symbol != 'CCCC':
-    #     return False
-    # 如果价格小于10元则暂时不用下载
-    # if symbol.last_price < 1 or symbol.last_price > 50:
-    #     return False
-    
-    # 成交量小于50万股的也不需要
-    # if symbol.volume and symbol.volume < 25 * 10000:
-    #         return False
-        
-        # 如果市值小于10元则暂时不用下载
-    # if symbol.market_cap is None or symbol.market_cap < 500 * 10000:
-    #     return False
+    if is_night_time():
+        return True
     if os.path.exists(file_path):
         # Get the file's last modification time
         last_modified_time = os.path.getmtime(file_path)
         # Get the current time
-        current_time = time.time()
+        current_time = datetime.now().timestamp()
+
         # Check if the file was modified in the last hour (3600 seconds)
         if current_time - last_modified_time < file_expire_seconds:
             return False
@@ -118,6 +109,17 @@ def should_download(symbol:Symbol, file_path:str):
             return True
     else:
         return True
+
+def is_night_time():
+    # Get the current time
+    current_time = datetime.now().time()
+
+    # Define the start and end times for the night period
+    night_start = time(21, 30)  # 9:30 PM
+    night_end = time(5, 30)     # 5:30 AM
+
+    # Check if the current time is between night_start and night_end
+    return night_start <= current_time or current_time <= night_end
 
 
 
