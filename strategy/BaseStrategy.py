@@ -63,9 +63,10 @@ class BaseStrategy(bt.Strategy):
         commission = commission_info.getcommission(self.data.close[0], self.data.volume[0])
         buy_value= (cash_to_spend - commission) / self.data.close[0]
        
-        print((cash_to_spend - commission),self.data.close[0] )
         if buy_value <= 0:
             return False
+        # self.order = self.buy(size=int(buy_value), price = self.data.close[0], exectype = bt.Order.Market )
+        self.order = self.buy(size=int(buy_value), price=self.data.close[0], exectype=bt.Order.Market)
         self.buy_date_data = {
                     'date': self.datas[0].datetime.datetime(0),
                     'open': self.datas[0].open[0],
@@ -74,7 +75,6 @@ class BaseStrategy(bt.Strategy):
                     'close': self.datas[0].close[0],
                     'volume': self.datas[0].volume[0],
                 }
-        self.order = self.buy(size=int(buy_value))
         return True
         
         
@@ -139,7 +139,7 @@ class BaseStrategy(bt.Strategy):
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
-
+        # print(trade)
         # self.log(f'交易盈亏: 毛盈亏 {trade.pnl}, 净盈亏 {trade.pnlcomm}')
 
         

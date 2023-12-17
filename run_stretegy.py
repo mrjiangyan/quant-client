@@ -1,10 +1,12 @@
 # 导入所需模块
 from __future__ import (absolute_import, division, print_function, unicode_literals)
+
 import datetime  # 日期时间模块
 import os.path  # 路径模块
 import pandas as pd
 # 导入backtrader平台
 import backtrader as bt
+print(bt.__version__)
 from data.service.symbol_service import getAll, get_by_symbol
 from datetime import datetime, timedelta
 from data.model.t_symbol import Symbol
@@ -87,16 +89,21 @@ def run_strategy(symbol: Symbol, period:str):
             
             # 创建策略实例
             cerebro = bt.Cerebro(stdstats = False, maxcpus =None)
-            # cerebro = bt.Cerebro()
+            # cerebro = bt.Cerebro(cheat_on_close = True)
+            # cerebro.broker_set_coc(True) 
             # 将策略实例添加到Cerebro中
             cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
-            cerebro.broker = bt.brokers.BackBroker(cash=cash)
-            cerebro.broker.setcommission(commission=0.0) 
+            cerebro.broker.setcommission(commission=0.002) 
+            cerebro.broker.set_cash(cash=cash)
+            cerebro.broker.set_slippage_perc(0.01)
+            cerebro.broker.set_slippage_fixed(0.03)
+            cerebro.broker.set_coc(True)
               # Create data source
             data = bt.feeds.PandasData(dataname=existing_data)
             cerebro.adddata(data)
             # 运行策略
-            cerebro.run(tradehistory = True)
+            # cerebro.run(tradehistory = True)
+            cerebro.run()
             # 获取统计信息
             ret = cerebro.broker.getvalue() / cerebro.broker.startingcash - 1
             
