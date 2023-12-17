@@ -18,7 +18,7 @@ import inspect
 
 current_working_directory = os.getcwd()
 
-cash = 100000.0
+cash = 10000.0
 days = 5
 # 示例：假设策略类定义在名为 "strategies" 的模块中
 module_name = "strategy"
@@ -91,7 +91,7 @@ def run_strategy(symbol: Symbol, period:str):
             # 将策略实例添加到Cerebro中
             cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
             cerebro.broker = bt.brokers.BackBroker(cash=cash)
-            cerebro.broker.setcommission(commission=0.001) 
+            cerebro.broker.setcommission(commission=0.0) 
               # Create data source
             data = bt.feeds.PandasData(dataname=existing_data)
             cerebro.adddata(data)
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     symbols = [symbol for symbol in symbols if symbol is not None]
 
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers= 400) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers= 20) as executor:
         futures = [executor.submit(run_strategy, symbol, period ) for symbol in symbols]
 
         for future in concurrent.futures.as_completed(futures):

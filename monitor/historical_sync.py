@@ -53,9 +53,9 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
        
         if isinstance(existing_data.index, pd.DatetimeIndex):
             existing_data.index = existing_data.index.tz_localize(None)  # Remove timezone if present
-            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('Asia/Shanghai')
         elif pd.Timestamp(existing_data.index):
-            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('Asia/Shanghai')
         else:
             print("Index type not recognized. Please check and handle accordingly.")
         df.reset_index(inplace=True)
@@ -72,9 +72,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
 
     else:
         if interval == '1d':
-            df[index_col] = pd.to_datetime(df.index.get_level_values('date')).tz_localize('UTC')
-            # Convert to a string
-            df[index_col] = df[index_col].dt.strftime('%Y-%m-%d')
+            df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai').dt.strftime('%Y-%m-%d')
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
     

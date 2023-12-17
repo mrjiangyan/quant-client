@@ -16,22 +16,7 @@ class MacdTrendStrategy(BaseStrategy):
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
         self.name = '底部MACD金叉趋势预判策略'
-        # Define the MACD indicator
-        self.macd = bt.indicators.MACD()
         
-        self.high_nine = bt.indicators.Highest(self.data.high, period= self.params.period)
-        # 9个交易日内最低价
-        self.low_nine = bt.indicators.Lowest(self.data.low, period=self.params.period)
-        # 计算rsv值
-        self.rsv = 100 * bt.DivByZero(
-            self.data_close - self.low_nine, self.high_nine - self.low_nine, zero=None
-        )
-        # 计算rsv的3周期加权平均值，即K值
-        self.K = bt.indicators.EMA(self.rsv, period=self.params.k_period, plot=False)
-        # D值=K值的3周期加权平均值
-        self.D = bt.indicators.EMA(self.K, period=self.params.d_period, plot=False)
-        # J=3*K-2*D
-        self.J = 3 * self.K - 2 * self.D
 
     def next(self):
         # Access MACD, signal, and histo values

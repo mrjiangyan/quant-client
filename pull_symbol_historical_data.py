@@ -18,7 +18,7 @@ max_concurrent_downloads = 200
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
-interval_map = { "1d": 'max' , "1h": 'ytd','1wk': 'max'}
+interval_map = { "1d": 'max' , '1m': '1d', "1h": 'ytd','1wk': 'max'}
 interval_map = { "1d": 'max' }
 
 
@@ -52,7 +52,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     
     # print(df)
-    df['Volume'] = df['Volume'].astype(int)
+    # df['Volume'] = df['Volume'].astype(int)
     
     if interval != '1d' and  interval != '1m'  and os.path.isfile(file_path):     
         existing_data = None
@@ -61,9 +61,9 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         
         if isinstance(existing_data.index, pd.DatetimeIndex):
             existing_data.index = existing_data.index.tz_localize(None)  # Remove timezone if present
-            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('Asia/Shanghai')
         elif pd.Timestamp(existing_data.index):
-            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('America/New_York')
+            existing_data.index = existing_data.index.tz_localize('UTC').tz_convert('Asia/Shanghai')
         else:
             print("Index type not recognized. Please check and handle accordingly.")
         df.reset_index(inplace=True)
@@ -82,7 +82,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     else:
         print(df)
         if interval == '1d':
-            df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('America/New_York').dt.strftime('%Y-%m-%d')
+            df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai').dt.strftime('%Y-%m-%d')
         # df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
        
         print(file_path)

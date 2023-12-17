@@ -11,6 +11,9 @@ class BaseStrategy(bt.Strategy):
         ("period", 9),
         ("k_period", 3),
         ("d_period", 3),
+        ("sell_cross", True),  # 是否根据死叉卖出
+        ("sell_gain_percentage", 0.20),  # 涨幅达到20%时卖出
+       
     )
      
     def __init__(self):
@@ -50,8 +53,8 @@ class BaseStrategy(bt.Strategy):
         if not self.check_allow_sell_or_buy():
             return False
         
-        cash_available = self.broker.get_cash()
         cash_to_spend = self.broker.get_cash() * self.params.percent_of_cash
+       
         if cash_to_spend <= 0:
             return False
 
@@ -60,6 +63,7 @@ class BaseStrategy(bt.Strategy):
         commission = commission_info.getcommission(self.data.close[0], self.data.volume[0])
         buy_value= (cash_to_spend - commission) / self.data.close[0]
        
+        print((cash_to_spend - commission),self.data.close[0] )
         if buy_value <= 0:
             return False
         self.buy_date_data = {
@@ -108,12 +112,19 @@ class BaseStrategy(bt.Strategy):
             self.log('订单取消/拒绝')
 
         self.order = None
+        
+        
+    def print_macd(self):
+        self.log(f'MACD DIF:{self.macd.macd[0]}, DEA:{self.macd.signal[0]}, MACD:{self.macd.macd - self.macd.signal}')
+    
+    def print_kdj(self):
+        self.log(f'K:{self.K[0]:.3f},D:{self.D[0]:.3f},J:{self.J[0]:.3f}')
     
     def calculate_profit_percentage(self):
         if self.position:
             buy_price = self.position.price
-            current_price = self.data.close[0]
-            return (current_price - buy_price) / buy_price
+            current_high_price = self.data.high[0]
+            return (current_high_price - buy_price) / buy_price
         return 0.0
     
     def log(self, txt, dt=None):
