@@ -1,26 +1,38 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 
+from typing import Dict, Any, Tuple
+
 class BaseStrategy(bt.Strategy):
     params = (
         ("symbol", ''),
         ("start_date", None),
         ("end_date", None),
-        ("percent_of_cash", 0.6),
+        ("percent_of_cash", 0.9),
         ("log_file_path", None),
         ("period", 9),
         ("k_period", 3),
         ("d_period", 3),
         ("sell_cross", True),  # 是否根据死叉卖出
         ("sell_gain_percentage", 0.20),  # 涨幅达到20%时卖出
-       
+        ("rsi_overbought", 70),  # RSI超买阈值
+        ("rsi_oversold", 30),  # RSI超卖阈值
     )
-     
+    
+    
+
+    def convert_params_to_dict(self) -> Dict[str, Any]:
+        return dict(self.params)
+
+    def get_params(self):
+        return self.convert_params_to_dict()
+    
     def __init__(self):
         self.order = None  # 用于存储订单对象的属性
         self.name = None  # 父类中定义的属性
           # Add your MACD indicator here
         self.macd = bt.indicators.MACD()
+        self.rsi = rsi = bt.indicators.RSI(self.datas[0])
         self.buy_date_data = None
         self.sell_date_data = None
         # Add Bollinger Bands
@@ -120,6 +132,9 @@ class BaseStrategy(bt.Strategy):
     def print_kdj(self):
         self.log(f'K:{self.K[0]:.3f},D:{self.D[0]:.3f},J:{self.J[0]:.3f}')
     
+    def print_rsi(self):
+            self.log(f'RSI1:{self.rsi[0]:.3f}')
+ 
     def calculate_profit_percentage(self):
         if self.position:
             buy_price = self.position.price

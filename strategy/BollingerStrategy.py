@@ -9,6 +9,8 @@ class BollingerStrategy(BaseStrategy):
         ("lookback_days", 8),  # Lookback period for checking highest price
         ("max_hold_days", 60),
         ("min_consecutive_down_days", 3),  # 至少要有3天连续阴线
+        ("cup_depth_percentage", 10),  # 杯部深度百分比
+        ("handle_depth_percentage", 5),  # 柄部深度百分比
     )
 
     def __init__(self):
@@ -16,6 +18,10 @@ class BollingerStrategy(BaseStrategy):
         self.name = '布林线短期内从触碰上轨到击穿下轨策略'
         self.filtered_dates = []
         self.consecutive_down_days = 0  # 用于追踪连续阴线的数量
+        
+        self.cup_handle_indicator = bt.indicators.CupHandle(depth_pct_cup=self.params.cup_depth_percentage,
+                                                            depth_pct_handle=self.params.handle_depth_percentage)
+
 
     def has_highest_price_touched_upper_band(self, lookback_days):
         # 获取过去 lookback_days 的最高价

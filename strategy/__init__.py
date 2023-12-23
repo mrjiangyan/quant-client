@@ -6,6 +6,6 @@ from .MacdTrendStrategy import MacdTrendStrategy
 from .MacdDoubleBottomStrategy import MacdDoubleBottomStrategy
 from .ContinuousDeclineOpportunityStrategy import ContinuousDeclineOpportunityStrategy
 from .monitor.__init__ import ContinuousDeclineOpportunityMonitorStrategy
-from .VolumeMonitorStrategy import VolumeMonitorStrategy
+from .IncreasedTradingVolumeStrategy import IncreasedTradingVolumeStrategy
 from .PriceVolumeAnalysisStrategy import PriceVolumeAnalysisStrategy
 from .DownDayStrategy import DownDayStrategy

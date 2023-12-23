@@ -4,12 +4,12 @@ from .BaseStrategy import BaseStrategy
 
 class ContinuousDeclineOpportunityStrategy(BaseStrategy):
     params = (
-        ("decline_percentage", 0.3),  # 下跌比例
-        ("consecutive_decline_days_config", 4),  # 连续下跌天数
-        ("volume_shrink_percentage", 0.33),  # 量能萎缩百分比
+        ("decline_percentage", 0.28),  # 下跌比例
+        ("consecutive_decline_days_config", 6),  # 连续下跌天数
+        # ("volume_shrink_percentage", 0.33),  # 量能萎缩百分比
         ("sell_cross", True),  # 是否根据死叉卖出
         ("sell_gain_percentage", 0.20),  # 涨幅达到20%时卖出
-        ("day_decline_percentage", 0.3),  # 单日跌幅限制
+        ("day_decline_percentage", 0.4),  # 单日跌幅限制
         ("print_signal_condition", False),  # 打印输出信号条件不满足的情况
     )
 
@@ -30,7 +30,7 @@ class ContinuousDeclineOpportunityStrategy(BaseStrategy):
         # 示例条件：收盘价连续下跌，并且跌幅超过20%
         if (
             (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage
-            and self.first_day_volume != 0 and self.data_volume / self.first_day_volume < self.params.volume_shrink_percentage
+            # and self.first_day_volume != 0 and self.data_volume / self.first_day_volume < self.params.volume_shrink_percentage
         ):
             return True
         else:
@@ -40,8 +40,8 @@ class ContinuousDeclineOpportunityStrategy(BaseStrategy):
         # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
         # 示例条件：收盘价连续下跌，并且跌幅超过20%
         if (
-            self.data_close < self.data_close[-1] 
-            or
+            # self.data_close < self.data_close[-1] 
+            # or
             self.data_close < self.data_open
         ):
             # 如果是第一天下跌，记录第一天的收盘价
@@ -78,8 +78,8 @@ class ContinuousDeclineOpportunityStrategy(BaseStrategy):
         if sell_signal == False:
             sell_signal = self.calculate_profit_percentage() > self.params.sell_gain_percentage
        
-        if sell_signal == False and self.buy_date_data:
-            sell_signal = (self.data.datetime.datetime(0) - self.buy_date_data['date']).days >=10
+        # if sell_signal == False and self.buy_date_data:
+        #     sell_signal = (self.data.datetime.datetime(0) - self.buy_date_data['date']).days >=10
          # 判断连续下跌的条件
         if self.is_decline():
             self.consecutive_decline_days += 1
@@ -111,8 +111,8 @@ class ContinuousDeclineOpportunityStrategy(BaseStrategy):
             buy_signal = self.check_day_decline_percentage()
             if self.params.print_signal_condition and not buy_signal:
                 self.log(f'{self.data.datetime.date(0)},下跌幅度条件不满足')
-     
-        if buy_signal and not self.position and self.internal_buy():
+                
+        if buy_signal and not self.position and  self.internal_buy():
                 self.log(f'连续下跌天数:{self.consecutive_decline_days}')
                 self.log(f'连续百分比:{(self.first_day_close - self.data_close) / self.first_day_close}')
                 self.print_kdj()

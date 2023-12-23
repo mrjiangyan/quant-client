@@ -1,5 +1,7 @@
 # 导入所需模块
 from __future__ import (absolute_import, division, print_function, unicode_literals)
+from typing import Dict, Any, Tuple
+
 
 import datetime  # 日期时间模块
 import os.path  # 路径模块
@@ -16,7 +18,7 @@ import traceback
 from loguru import logger
 import importlib
 import inspect
-
+from strategy.BaseStrategy import BaseStrategy
 
 current_working_directory = os.getcwd()
 
@@ -25,7 +27,7 @@ days = 5
 # 示例：假设策略类定义在名为 "strategies" 的模块中
 module_name = "strategy"
 
-selected_strategies = []
+strategy_cls = None
 
 output_path = ''
 
@@ -49,7 +51,7 @@ def allow_cerebro(symbol:Symbol, period:str ):
     #     return False
     return True
 
-def run_strategy(symbol: Symbol, period:str):
+def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
     try:
         if allow_cerebro(symbol, period) == False:
             return symbol, None
@@ -69,53 +71,76 @@ def run_strategy(symbol: Symbol, period:str):
         # existing_data['High'] = existing_data['High'].replace(0, 0.01)
         # existing_data['Low'] = existing_data['Low'].replace(0, 0.01)
         # existing_data['Volume'] = existing_data['Volume'].replace(0, 1)
-        # existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
-        #         .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
-        #         .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
+        existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
+                .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
+                .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
 
         if len(existing_data) < 50:
                 return symbol , None
         print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
 
-        enums = enumerate(selected_strategies)
+         # 创建日志文件路径
+        log_file_path = os.path.join(output_path, f'{symbol.symbol}.log')
         
-       
-       
-        for i, strategy_cls in enums:
+        # 创建策略实例
+        cerebro = bt.Cerebro(stdstats = False, maxcpus =None)
+        # cerebro = bt.Cerebro(cheat_on_close = True)
+        # cerebro.broker_set_coc(True) 
+        # 将策略实例添加到Cerebro中
+        cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
+        cerebro.broker.setcommission(commission=0.002) 
+        cerebro.broker.set_cash(cash=cash)
+        cerebro.broker.set_slippage_perc(0.01)
+        cerebro.broker.set_slippage_fixed(0.03)
+        cerebro.broker.set_coc(True)
+            # Create data source
+        data = bt.feeds.PandasData(dataname=existing_data)
+        cerebro.adddata(data)
+        # 运行策略
+        # cerebro.run(tradehistory = True)
+        cerebro.run()
+        
+        # 获取统计信息
+        ret = cerebro.broker.getvalue() / cerebro.broker.startingcash - 1
+        
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'a') as f:
+                f.write(f"账户总值: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}\n")
            
-            # 创建日志文件路径
-            log_file_path = os.path.join(output_path, f'{symbol.symbol}.log')
-            
-            # 创建策略实例
-            cerebro = bt.Cerebro(stdstats = False, maxcpus =None)
-            # cerebro = bt.Cerebro(cheat_on_close = True)
-            # cerebro.broker_set_coc(True) 
-            # 将策略实例添加到Cerebro中
-            cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
-            cerebro.broker.setcommission(commission=0.002) 
-            cerebro.broker.set_cash(cash=cash)
-            cerebro.broker.set_slippage_perc(0.01)
-            cerebro.broker.set_slippage_fixed(0.03)
-            cerebro.broker.set_coc(True)
-              # Create data source
-            data = bt.feeds.PandasData(dataname=existing_data)
-            cerebro.adddata(data)
-            # 运行策略
-            # cerebro.run(tradehistory = True)
-            cerebro.run()
-            # 获取统计信息
-            ret = cerebro.broker.getvalue() / cerebro.broker.startingcash - 1
-            
-            if os.path.exists(log_file_path):
-                with open(log_file_path, 'a') as f:
-                    f.write(f"账户总值: {cerebro.broker.getvalue():.2f}, Returns: {ret:.2%}\n")
           
     except Exception as e:
         traceback.print_exc()
         logger.error(symbol.symbol)
         return symbol, e
     return symbol, cerebro.broker.getvalue()
+
+ # 获取参数
+
+def get_user_input_for_params(strategy_cls:BaseStrategy):
+
+   # 假设 strategy_cls 是 BaseStrategy
+    strategy_instance = strategy_cls()
+
+    # 然后你可以调用实例方法，例如 get_params
+    strategy_cls = strategy_instance.get_params()
+
+    # 也可以直接访问实例属性，例如 params
+    print(strategy_instance.params)
+
+    user_input_params = {}
+    # for param_tuple in params_tuples:
+    #     param_name, param_default = param_tuple
+    #     user_input = input(f"请输入 {param_name} 的值（默认为 {param_default}）: ") or param_default
+    #     user_input_params[param_name] = type(param_default)(user_input)  # 将用户输入的值转换为参数的类型
+
+    # user_input_params = {}
+    # for param_name, param_default in params:
+    #     user_input = input(f"请输入 {param_name} 的值（默认为 {param_default}）: ") or param_default
+    #     user_input_params[param_name] = type(param_default)(user_input)  # 将用户输入的值转换为参数的类型
+
+   
+    return user_input_params
 
     
 def analyze_returns(symbol_returns):
@@ -162,9 +187,9 @@ def select_strategy():
         elif user_input.isdigit():
             index = int(user_input) - 1
             if 0 <= index < len(all_strategies):
-                selected_indexes.append(index)
                 print(f"已选择运行策略: {all_strategies[index].__name__}")
-                break
+                return all_strategies[index]
+
             else:
                 print("无效的策略编号，请重新输入")
         else:
@@ -188,12 +213,11 @@ if __name__ == '__main__':
 
     days = int(default_days)
 
-    selected_indexes = []
-    select_strategy()
+    strategy_cls = select_strategy()
+ 
+    print(strategy_cls)
 
-    selected_strategies = [cls for idx, cls in enumerate(all_strategies) if idx in selected_indexes]
-    
-    output_path = os.path.join(current_working_directory, 'output', selected_strategies[0].__name__,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
+    output_path = os.path.join(current_working_directory, 'output', strategy_cls.__name__,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
 
     if not os.path.exists(output_path):
         # 不存在则创建
@@ -217,8 +241,8 @@ if __name__ == '__main__':
     symbols = [symbol for symbol in symbols if symbol is not None]
 
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers= 20) as executor:
-        futures = [executor.submit(run_strategy, symbol, period ) for symbol in symbols]
+    with concurrent.futures.ThreadPoolExecutor(max_workers= 50) as executor:
+        futures = [executor.submit(run_strategy, symbol, period, None ) for symbol in symbols]
 
         for future in concurrent.futures.as_completed(futures):
             symbol, result_or_exception = future.result()

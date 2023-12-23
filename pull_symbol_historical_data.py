@@ -17,7 +17,7 @@ max_concurrent_downloads = 200
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
-interval_map = {"1d": 'max', '1m': '7d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
+interval_map = {"1d": 'max', '1m': '1d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
 interval_map = { "1d": 'max' , '1m': '1d', "1h": 'ytd','1wk': 'max'}
 interval_map = { "1d": 'max' }
 
@@ -83,12 +83,8 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         print(df)
         if interval == '1d':
             df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai').dt.strftime('%Y-%m-%d')
-        # df = df.loc[(df['Volume'] != 0) & (df['Volume'].notna())]
-       
-        print(file_path)
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
-    
     
 def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:

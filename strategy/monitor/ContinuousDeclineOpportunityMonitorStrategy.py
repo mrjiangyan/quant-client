@@ -5,10 +5,8 @@ from ..BaseStrategy import BaseStrategy
 class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
     params = (
         ("decline_percentage", 0.2),  # 下跌比例
-        ("consecutive_decline_days_config", 4),  # 连续下跌天数
-        ("volume_shrink_percentage", 0.25),  # 量能萎缩百分比
+        ("consecutive_decline_days_config", 5),  # 连续下跌天数
         ("day_decline_percentage", 0.4),  # 单日跌幅超过40%
-        ("print_signal_condition", False),  # 打印输出信号条件不满足的情况
     )
 
     def __init__(self):
@@ -26,8 +24,7 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
         # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
         # 示例条件：收盘价连续下跌，并且跌幅超过20%
         if (
-            (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage and
-            self.data_volume / self.first_day_volume < self.params.volume_shrink_percentage
+            (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage 
         ):
             return True
         else:
@@ -37,8 +34,7 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
         # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
         # 示例条件：收盘价连续下跌，并且跌幅超过20%
         if (
-            self.data_close < self.data_close[-1] and
-            self.data_close <= self.data_open
+            self.data_close < self.data_open
         ):
             # 如果是第一天下跌，记录第一天的收盘价
             return True
@@ -65,15 +61,12 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
     def check_day_decline_percentage(self):
         for i in range(-self.consecutive_decline_days, 0):
             close = self.data.close[i]
-            # print(self.data.datetime.date(0),self.data.datetime.date(i),volume)
             if (self.data.close[i-1] - close)/self.data.close[i-1] > self.params.day_decline_percentage:
-                print(self.data.datetime.date(0), self.data.close[i-1], close, (self.data.close[i-1] - close)/self.data.close[i-1])
                 return False
         return True
     
     def next(self):
-        if not self.check_allow_sell_or_buy():
-            return
+       
          # 判断连续下跌的条件
         if self.is_decline():
             self.consecutive_decline_days += 1
@@ -91,16 +84,16 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
         if buy_signal == False:
             buy_signal = self.consecutive_decline_condition() 
            
-        if buy_signal == False:
-            buy_signal = self.check_macd()
+        # if buy_signal == False:
+        #     buy_signal = self.check_macd()
               
-        if buy_signal == False:
-            buy_signal = self.check_volume()
+        # if buy_signal == False:
+        #     buy_signal = self.check_volume()
                 
 
-        if buy_signal and (self.consecutive_decline_days >= self.params.consecutive_decline_days_config
+        if buy_signal   and  (self.consecutive_decline_days >= self.params.consecutive_decline_days_config
             and self.check_day_decline_percentage() 
-            and  (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage) :
+           ) and self.check_allow_sell_or_buy() :
             self.log(f'{self.data.datetime.date(0)}连续下跌天数:{self.consecutive_decline_days}')
             if self.first_day_close !=0:
                 self.log(f'连续下跌百分比:{(self.first_day_close - self.data_close) / self.first_day_close}')
@@ -109,7 +102,6 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
             log_content = ''
             
             for i in range(-self.consecutive_decline_days, 1):
-                    print(i)
                     log_content += f"Date: {self.data.datetime.date(i)} | "
                     log_content += f"开盘: {self.data.open[i]:.2f} | "
                     log_content += f"最高: {self.data.high[i]:.2f} | "
