@@ -15,21 +15,14 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     name = Column("name", String, doc="名称")
     last_price = Column("last_price", Float,  doc="最后价格")
     ipo_year = Column("ipo_year", Integer, index=True, doc="IPO年份")
-    country = Column("country", String, index=True, doc="country")
+    country = Column("country", String, index=True, doc="所属国家")
     industry = Column("industry", String, index=True, doc="所属行业")
     market_cap = Column("market_cap", Integer, index=True, doc="市值")
-    volume = Column("volume", Integer, index=True, doc="成交量")
-
-    
-    
-    # imdb_link = Column("imdb_link", String, index=True, doc="imdb_link")
-    # douban_link = Column("douban_link", String, index=True, doc="douban_link")
-    # category = Column("category", String, index=True, doc="category")
-    
-    # cover = Column("cover", String, doc="封面图片地址")
-    # images = Column("images", String, doc="介绍图片地址")
-    # torrent = Column("torrent", String, doc="种子地址,用‘,'来','分割多个地址")
-    # unicode = Column("unicode", String, index=True, doc="唯一标识")
+    volume = Column("volume", Integer,  doc="成交量")
+    # 股票数量
+    shares_outstanding = Column("shares_outstanding", Integer, doc="总股本")
+    change = Column("change", Float, doc="涨跌幅度")
+   
    
     gmtUpdate = Column("gmt_update", DateTime, default=func.now(), onupdate=func.now(), doc="更新时间")
    

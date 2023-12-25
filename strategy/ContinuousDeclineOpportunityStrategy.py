@@ -1,16 +1,17 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 from .BaseStrategy import BaseStrategy
+import datetime
 
 class ContinuousDeclineOpportunityStrategy(BaseStrategy):
     params = (
-        ("decline_percentage", 0.28),  # 下跌比例
+        ("decline_percentage", 0.28),  # 下跌幅度
         ("consecutive_decline_days_config", 6),  # 连续下跌天数
         # ("volume_shrink_percentage", 0.33),  # 量能萎缩百分比
         ("sell_cross", True),  # 是否根据死叉卖出
         ("sell_gain_percentage", 0.20),  # 涨幅达到20%时卖出
         ("day_decline_percentage", 0.4),  # 单日跌幅限制
-        ("print_signal_condition", False),  # 打印输出信号条件不满足的情况
+        ("print_signal_condition", True),  # 打印输出信号条件不满足的情况
     )
 
     def __init__(self):
@@ -37,28 +38,23 @@ class ContinuousDeclineOpportunityStrategy(BaseStrategy):
             return False
         
     def is_decline(self):
-        # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
-        # 示例条件：收盘价连续下跌，并且跌幅超过20%
-        if (
-            # self.data_close < self.data_close[-1] 
-            # or
-            self.data_close < self.data_open
-        ):
-            # 如果是第一天下跌，记录第一天的收盘价
-            return True
-        else:
-            return False
+       return (
+            (self.data_open[0] - self.data_close[0]) / self.data_open[0] > 0.05
+            or
+            (self.data_close[-1] - self.data_close[0]) / self.data_close[-1] > 0.05
+        ) and  self.data_close < self.data_open
 
     def check_volume(self):
-        max_volume = min_volume = 0
+        max_volume = 0
+        total_volumes = 0
         for i in range(-self.consecutive_decline_days, 0):
             volume = self.data.volume[i]
+            total_volumes+=volume
             if volume > max_volume:
                 max_volume = volume
-            elif min_volume == 0 or volume < min_volume:
-                min_volume = volume
 
-        return max_volume > 100000 and min_volume > 10000
+        #需要满足最大成交量，最小成交量以及购买日的成交量需要小于平均成交量的需求
+        return max_volume > 100000 and total_volumes/self.consecutive_decline_days > self.data.volume[0]
     
     
     def check_macd(self):

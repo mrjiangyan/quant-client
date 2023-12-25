@@ -104,7 +104,7 @@ def should_download(symbol:Symbol, file_path:str):
 
 def sync():
     # Create the full path for the download file in the current directory
-    download_path = os.path.join(os.getcwd(), 'historical_data')
+    download_path = os.path.join(os.getcwd(), 'resources', 'historical_data')
     # Create the directory if it doesn't exist
     os.makedirs(download_path, exist_ok=True)
 

@@ -57,7 +57,7 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
             return symbol, None
         # Create cerebro instance for each symbol
         
-        datapath = os.path.join(current_working_directory, f'historical_data/{period}/{symbol.symbol}.csv')
+        datapath = os.path.join(current_working_directory, 'resources', f'historical_data/{period}/{symbol.symbol}.csv')
         if not os.path.exists(datapath):
             return symbol.symbol, None
 

@@ -53,6 +53,6 @@ def is_night_time():
 
 if __name__ == "__main__":
    # Create the full path for the download file in the current directory
-    download_path = os.path.join(os.getcwd(), 'historical_data')
+    download_path = os.path.join(os.getcwd(), 'resources', 'historical_data')
       
     download_data('AAP', download_path)

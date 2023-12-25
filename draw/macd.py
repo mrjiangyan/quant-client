@@ -57,7 +57,7 @@ def plot_macd(data, dif, macd, dea, signal_line, histogram):
 # 主函数
 def main():
    
-    file_path = os.path.join(os.getcwd(), 'historical_data/1d/AAPL.csv')
+    file_path = os.path.join(os.getcwd(), 'resources', 'historical_data/1d/AAPL.csv')
     print(file_path)
     stock_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')  
     stock_data.index = pd.to_datetime(stock_data.index, utc=True)

@@ -17,6 +17,8 @@ class BaseStrategy(bt.Strategy):
         ("sell_gain_percentage", 0.20),  # 涨幅达到20%时卖出
         ("rsi_overbought", 70),  # RSI超买阈值
         ("rsi_oversold", 30),  # RSI超卖阈值
+        ("sell_cross", True),  # 是否根据死叉卖出
+   
     )
     
     
@@ -157,4 +159,8 @@ class BaseStrategy(bt.Strategy):
         # print(trade)
         # self.log(f'交易盈亏: 毛盈亏 {trade.pnl}, 净盈亏 {trade.pnlcomm}')
 
+    # def next(self):
+    #     self.auto_sell()
         
+    # # 自动卖出交易，根据持仓以及卖出信号进行卖出操作
+    # def auto_sell(self):

@@ -1,8 +1,8 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
-from ..BaseStrategy import BaseStrategy
+from ..ContinuousDeclineOpportunityStrategy import ContinuousDeclineOpportunityStrategy
 
-class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
+class ContinuousDeclineOpportunityMonitorStrategy(ContinuousDeclineOpportunityStrategy):
     params = (
         ("decline_percentage", 0.2),  # 下跌比例
         ("consecutive_decline_days_config", 5),  # 连续下跌天数
@@ -12,59 +12,8 @@ class ContinuousDeclineOpportunityMonitorStrategy(BaseStrategy):
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
         self.name = '连续阴线快速下跌监控策略'
-        # 添加用于判断连续下跌的变量
-        self.consecutive_decline_days = 0
-        self.data_close = self.data.close
-        self.data_open = self.data.open
-        self.data_volume = self.data.volume
-        self.first_day_close = 0  # 记录第一天下跌的收盘价
-        self.first_day_volume = 0  # 记录第一天下跌的收盘价
+       
 
-    def consecutive_decline_condition(self):
-        # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
-        # 示例条件：收盘价连续下跌，并且跌幅超过20%
-        if (
-            (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage 
-        ):
-            return True
-        else:
-            return False
-        
-    def is_decline(self):
-        # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
-        # 示例条件：收盘价连续下跌，并且跌幅超过20%
-        if (
-            self.data_close < self.data_open
-        ):
-            # 如果是第一天下跌，记录第一天的收盘价
-            return True
-        else:
-            return False
-
-    def check_volume(self):
-        max_volume = min_volume = 0
-        for i in range(-self.consecutive_decline_days, 0):
-            volume = self.data.volume[i]
-            # print(self.data.datetime.date(0),self.data.datetime.date(i),volume)
-            if volume > max_volume:
-                max_volume = volume
-            elif min_volume == 0 or volume < min_volume:
-                min_volume = volume
-
-        # print(self.data.datetime.date(0), max_volume, min_volume)
-        return max_volume > 100000 and min_volume > 10000
-    
-    
-    def check_macd(self):
-        return self.macd.macd[0] < 0.1 and self.macd.macd[0] < self.macd.signal[0]
-    
-    def check_day_decline_percentage(self):
-        for i in range(-self.consecutive_decline_days, 0):
-            close = self.data.close[i]
-            if (self.data.close[i-1] - close)/self.data.close[i-1] > self.params.day_decline_percentage:
-                return False
-        return True
-    
     def next(self):
        
          # 判断连续下跌的条件

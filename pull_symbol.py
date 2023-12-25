@@ -4,11 +4,10 @@ from data.model.t_symbol import Symbol
 import os
 from data.service.symbol_service import get_by_symbol
 from data import database
+import math
 
  # 必须要通过app上下文去启动数据库
 database.global_init("edge.db")
-
-url = "blob:https://www.nasdaq.com/a57045f7-ec5e-4f27-9502-0bf84d305728"
 
 local_path = "nasdaq_screener_1702257238390.csv"
 
@@ -48,6 +47,13 @@ with database.create_session() as db_sess:
             domain.last_price = row['Last Sale'].replace("$","")
             domain.market = 'US'
             domain.market_cap = row['Market Cap']
+            market_cap = float(domain.market_cap)
+            if domain.market_cap is not None and not math.isnan(market_cap):
+                domain.shares_outstanding = int(market_cap / float(domain.last_price))
+            else:
+                domain.shares_outstanding = 0
+            domain.change = row['% Change'].replace('%','')
+           
             if is_create == False:
                 # 如果记录已经存在于数据库中，使用 merge 进行更新
                 db_sess.merge(domain)
