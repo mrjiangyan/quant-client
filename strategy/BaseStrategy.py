@@ -18,7 +18,6 @@ class BaseStrategy(bt.Strategy):
         ("rsi_overbought", 70),  # RSI超买阈值
         ("rsi_oversold", 30),  # RSI超卖阈值
         ("sell_cross", True),  # 是否根据死叉卖出
-   
     )
     
     
@@ -34,9 +33,11 @@ class BaseStrategy(bt.Strategy):
         self.name = None  # 父类中定义的属性
           # Add your MACD indicator here
         self.macd = bt.indicators.MACD()
-        self.rsi = rsi = bt.indicators.RSI(self.datas[0])
+        self.rsi = bt.indicators.RSI(self.datas[0])
         self.buy_date_data = None
         self.sell_date_data = None
+        self.last_sell_day = None
+        
         # Add Bollinger Bands
         self.bollinger = bt.indicators.BollingerBands()
         
@@ -54,6 +55,7 @@ class BaseStrategy(bt.Strategy):
         self.D = bt.indicators.EMA(self.K, period=self.params.d_period, plot=False)
         # J=3*K-2*D
         self.J = 3 * self.K - 2 * self.D
+       
         
    
     
@@ -82,7 +84,7 @@ class BaseStrategy(bt.Strategy):
         # self.order = self.buy(size=int(buy_value), price = self.data.close[0], exectype = bt.Order.Market )
         self.order = self.buy(size=int(buy_value), price=self.data.close[0], exectype=bt.Order.Market)
         self.buy_date_data = {
-                    'date': self.datas[0].datetime.datetime(0),
+                    'date': self.datas[0].datetime.date(0),
                     'open': self.datas[0].open[0],
                     'high': self.datas[0].high[0],
                     'low': self.datas[0].low[0],
@@ -100,7 +102,7 @@ class BaseStrategy(bt.Strategy):
             return
 
         self.sell_date_data = {
-                    'date': self.datas[0].datetime.datetime(0),
+                    'date': self.datas[0].datetime.date(0),
                     'open': self.datas[0].open[0],
                     'high': self.datas[0].high[0],
                     'low': self.datas[0].low[0],
@@ -108,7 +110,7 @@ class BaseStrategy(bt.Strategy):
                     'volume': self.datas[0].volume[0],
                 }
         self.sell(size= position_size)
-        
+        self.last_sell_day = self.datas[0].datetime.date(0)
         return True
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -116,6 +118,7 @@ class BaseStrategy(bt.Strategy):
         if order.status in [order.Completed]:
             execution_date = bt.num2date(order.executed.dt).strftime('%Y-%m-%d')
             if order.isbuy():
+                self.last_sell_day = None
                 self.log(f"买入日期: {execution_date}, 开盘价: {self.buy_date_data['open']:.2f}, 最高价: {self.buy_date_data['high']:.2f}, 最低价: {self.buy_date_data['low']:.2f}, 收盘价: {self.buy_date_data['close']:.2f}, 交易量: {self.buy_date_data['volume']:.2f}")
                 self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f}")
             elif order.issell():
@@ -136,7 +139,14 @@ class BaseStrategy(bt.Strategy):
     
     def print_rsi(self):
             self.log(f'RSI1:{self.rsi[0]:.3f}')
- 
+    
+    def print_bolling(self):
+        self.log("布林线: 上轨: {:.2f}, 中轨: {:.2f}, 下轨: {:.2f}".format(
+                        self.bollinger.lines.top[0],
+                        self.bollinger.lines.mid[0],
+                        self.bollinger.lines.bot[0]
+                    ))
+
     def calculate_profit_percentage(self):
         if self.position:
             buy_price = self.position.price

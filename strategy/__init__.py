@@ -4,7 +4,7 @@ from .MacdCrossStrategy import MacdCrossStrategy
 from .BollingerStrategy import BollingerStrategy
 from .MacdTrendStrategy import MacdTrendStrategy
 from .MacdDoubleBottomStrategy import MacdDoubleBottomStrategy
-from .ContinuousDeclineOpportunityStrategy import ContinuousDeclineOpportunityStrategy
+from .RapidReboundContinuousDeclineStrategy import RapidReboundContinuousDeclineStrategy
 from .monitor.__init__ import ContinuousDeclineOpportunityMonitorStrategy
 from .IncreasedTradingVolumeStrategy import IncreasedTradingVolumeStrategy
 from .PriceVolumeAnalysisStrategy import PriceVolumeAnalysisStrategy

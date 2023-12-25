@@ -1,8 +1,8 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
-from ..ContinuousDeclineOpportunityStrategy import ContinuousDeclineOpportunityStrategy
+from ..RapidReboundContinuousDeclineStrategy import RapidReboundContinuousDeclineStrategy
 
-class ContinuousDeclineOpportunityMonitorStrategy(ContinuousDeclineOpportunityStrategy):
+class ContinuousDeclineOpportunityMonitorStrategy(RapidReboundContinuousDeclineStrategy):
     params = (
         ("decline_percentage", 0.2),  # 下跌比例
         ("consecutive_decline_days_config", 5),  # 连续下跌天数
