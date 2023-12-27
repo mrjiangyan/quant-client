@@ -5,7 +5,7 @@ from typing import Dict, Any, Tuple
 
 class BaseStrategy(bt.Strategy):
     params = (
-        ("symbol", ''),
+        ("symbol", None),
         ("start_date", None),
         ("end_date", None),
         ("percent_of_cash", 0.9),
@@ -19,8 +19,6 @@ class BaseStrategy(bt.Strategy):
         ("rsi_oversold", 30),  # RSI超卖阈值
         ("sell_cross", True),  # 是否根据死叉卖出
     )
-    
-    
 
     def convert_params_to_dict(self) -> Dict[str, Any]:
         return dict(self.params)
@@ -55,6 +53,12 @@ class BaseStrategy(bt.Strategy):
         self.D = bt.indicators.EMA(self.K, period=self.params.d_period, plot=False)
         # J=3*K-2*D
         self.J = 3 * self.K - 2 * self.D
+        
+        
+        self.volume_sma5 = bt.indicators.SimpleMovingAverage(self.data.volume, period=5)
+        self.volume_sma10 = bt.indicators.SimpleMovingAverage(self.data.volume, period=10)
+        self.volume_sma30 = bt.indicators.SimpleMovingAverage(self.data.volume, period=30)
+
        
         
    
@@ -113,6 +117,7 @@ class BaseStrategy(bt.Strategy):
         self.last_sell_day = self.datas[0].datetime.date(0)
         return True
     def notify_order(self, order):
+        self.order = order
         if order.status in [order.Submitted, order.Accepted]:
             return
         if order.status in [order.Completed]:
@@ -128,7 +133,7 @@ class BaseStrategy(bt.Strategy):
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('订单取消/拒绝')
 
-        self.order = None
+       
         
         
     def print_macd(self):
@@ -138,7 +143,7 @@ class BaseStrategy(bt.Strategy):
         self.log(f'K:{self.K[0]:.3f},D:{self.D[0]:.3f},J:{self.J[0]:.3f}')
     
     def print_rsi(self):
-            self.log(f'RSI1:{self.rsi[0]:.3f}')
+        self.log(f'RSI1:{self.rsi[0]:.3f}')
     
     def print_bolling(self):
         self.log("布林线: 上轨: {:.2f}, 中轨: {:.2f}, 下轨: {:.2f}".format(

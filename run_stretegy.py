@@ -88,7 +88,7 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
         # cerebro = bt.Cerebro(cheat_on_close = True)
         # cerebro.broker_set_coc(True) 
         # 将策略实例添加到Cerebro中
-        cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path)
+        cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
         cerebro.broker.setcommission(commission=0.002) 
         cerebro.broker.set_cash(cash=cash)
         cerebro.broker.set_slippage_perc(0.01)
