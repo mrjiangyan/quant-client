@@ -5,6 +5,7 @@ import backtrader as bt
 #macd趋势分析
 class MacdTrendStrategy(BaseStrategy):
     params = (
+        ("name", '底部MACD金叉趋势预判策略'), 
         ("macd_level", -0.3),
         ('oversold_threshold', 30),
         ("period", 9),
@@ -15,7 +16,6 @@ class MacdTrendStrategy(BaseStrategy):
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '底部MACD金叉趋势预判策略'
         
 
     def next(self):

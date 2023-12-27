@@ -146,7 +146,7 @@ def get_user_input_for_params(strategy_cls:BaseStrategy):
 def analyze_returns(symbol_returns):
     # Dictionary to store individual returns for each symbol
     symbol_individual_returns = {}
-    log_file_path = os.path.join(output_path, f'summary.log')
+    log_file_path = os.path.join(output_path, f'_summary.log')
     
     print(log_file_path)
     with open(log_file_path, 'a') as f:
@@ -178,7 +178,8 @@ def analyze_returns(symbol_returns):
                    
 def select_strategy():
     for i, strategy in enumerate(all_strategies):
-        print(f"{i + 1}. {strategy.__name__}")
+        strategy_name = getattr(strategy.params, 'name')
+        print(f"{i + 1}.  {strategy_name}[{strategy.__name__}]")
 
     while True:
         user_input = input("请输入要运行的策略编号（输入exit结束选择）: ")

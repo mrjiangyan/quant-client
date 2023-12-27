@@ -6,6 +6,7 @@ from loguru import logger
 
 class BollingerStrategy(BaseStrategy):
     params = (
+        ("name", '布林线短期内从触碰上轨到击穿下轨策略'), 
         ("lookback_days", 8),  # Lookback period for checking highest price
         ("max_hold_days", 60),
         ("min_consecutive_down_days", 3),  # 至少要有3天连续阴线
@@ -15,7 +16,6 @@ class BollingerStrategy(BaseStrategy):
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '布林线短期内从触碰上轨到击穿下轨策略'
         self.filtered_dates = []
         self.consecutive_down_days = 0  # 用于追踪连续阴线的数量
         

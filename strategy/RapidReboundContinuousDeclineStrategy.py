@@ -5,6 +5,8 @@ from .BaseStrategy import BaseStrategy
 
 class RapidReboundContinuousDeclineStrategy(BaseStrategy):
     params = (
+        ("name", '连续阴线快速下跌买入策略'), 
+     
         ("decline_percentage", 0.28),  # 下跌幅度
         ("consecutive_decline_days_config", 6),  # 连续下跌天数
         ("volume_shrink_percentage", 0.80),  # 量能萎缩百分比
@@ -16,7 +18,6 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '连续阴线快速下跌买入策略'
         # 添加用于判断连续下跌的变量
         self.consecutive_decline_days = 0
         self.data_close = self.data.close
@@ -37,7 +38,7 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
         return decline_ratio >  self.consecutive_decline_days * 0.05 
         
     def is_decline(self):
-       return self.data_close < self.data_open #and (self.data_close[0] - self.data_close[-1])/ self.data_close[-1] < 0.02
+       return self.data_close < self.data_open and (self.data_close[0] - self.data_close[-1])/ self.data_close[-1] < 0.02
        
 
     def is_highest_close_30(self, index):

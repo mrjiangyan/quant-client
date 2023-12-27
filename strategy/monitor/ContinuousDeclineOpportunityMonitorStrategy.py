@@ -11,7 +11,7 @@ class ContinuousDeclineOpportunityMonitorStrategy(RapidReboundContinuousDeclineS
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '连续阴线快速下跌监控策略'
+        self.params.name = '连续阴线快速下跌监控策略'
        
 
     def next(self):

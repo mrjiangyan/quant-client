@@ -5,6 +5,7 @@ from typing import Dict, Any, Tuple
 
 class BaseStrategy(bt.Strategy):
     params = (
+        ("name", None),
         ("symbol", None),
         ("start_date", None),
         ("end_date", None),
@@ -28,7 +29,6 @@ class BaseStrategy(bt.Strategy):
     
     def __init__(self):
         self.order = None  # 用于存储订单对象的属性
-        self.name = None  # 父类中定义的属性
           # Add your MACD indicator here
         self.macd = bt.indicators.MACD()
         self.rsi = bt.indicators.RSI(self.datas[0])
@@ -165,7 +165,7 @@ class BaseStrategy(bt.Strategy):
         
         if self.params.log_file_path:
             with open(self.params.log_file_path, 'a') as f:
-                f.write(f"{dt.isoformat()}, {self.name}, {txt}\n")
+                f.write(f"{dt.isoformat()}, {self.params.name}, {txt}\n")
 
 
     def notify_trade(self, trade):

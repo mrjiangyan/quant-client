@@ -5,6 +5,7 @@ from .BaseStrategy import BaseStrategy
 
 class MacdStrategy(BaseStrategy):
     params = (
+        ("name", '底部MACD金叉与kdj底部策略'), 
         ("macd_level", -0.5),
         ("period", 9),
         ("k_period", 3),
@@ -15,8 +16,7 @@ class MacdStrategy(BaseStrategy):
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '底部MACD金叉与kdj底部策略'
-        
+       
        
         self.close_prices = self.data.close.get(size=15)  # 获取最近15天的收盘价
         

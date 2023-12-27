@@ -4,6 +4,8 @@ from .BaseStrategy import BaseStrategy
 
 class MacdCrossStrategy(BaseStrategy):
     params = (
+        ("name", '底部金叉死叉策略'), 
+     
         ("waiting_period", 10),  # 等待期限
         ("period", 9),
         ("k_period", 3),
@@ -15,8 +17,7 @@ class MacdCrossStrategy(BaseStrategy):
 
     def __init__(self):
         super().__init__()  # 调用父类的构造函数
-        self.name = '底部金叉死叉策略'
-       
+        
         # 追踪最近的金叉和死叉
         self.cross_countdown = 0
         self.gold_crocss_dif =0 
