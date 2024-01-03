@@ -1,7 +1,17 @@
 import os
 import time
-from datetime import datetime, timedelta,time
+from datetime import datetime, time
+import resource
+# 获取当前资源限制
+soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+print(f"Current soft limit: {soft_limit}, hard limit: {hard_limit}")
 
+# 设置文件描述符数量限制为无穷大
+resource.setrlimit(resource.RLIMIT_NOFILE, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+
+# 获取设置后的资源限制
+soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+print(f"Updated soft limit: {soft_limit}, updated hard limit: {hard_limit}")
 import concurrent.futures
 from data.service.symbol_service import getAll, get_by_symbol
 from data import database
@@ -19,13 +29,13 @@ file_expire_seconds = 6 * 60 * 60
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '1d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
 interval_map = { "1d": 'max' , '1m': '1d', "1h": 'ytd','1wk': 'max'}
-interval_map = { "1d": 'max' }
+interval_map = { "1d": 'max','1wk': 'max' }
 
 
 # Function to download historical data for a symbol
 def download_data(symbol:Symbol, root_path):
     symbol_code = symbol.symbol.replace(" ", "")
-    #print(symbol_code)
+    print(symbol_code)
     for key, value in interval_map.items():
         try:
             directory_path =  os.path.join(root_path,  key)
@@ -51,10 +61,8 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
     else:
         columns_to_save =   ['Date','Open', 'High', 'Low', 'Close', 'Volume']
     
-    # print(df)
-    # df['Volume'] = df['Volume'].astype(int)
-    
-    if interval != '1d' and  interval != '1m'  and os.path.isfile(file_path):     
+    print(df)
+    if interval not in ['1d', '1m', '1wk'] and os.path.exists(file_path):  
         existing_data = None
         existing_data = pd.read_csv(file_path, parse_dates=[index_col], index_col=index_col) 
         existing_data.index = pd.to_datetime(existing_data.index,  utc= True, errors='coerce')
@@ -80,8 +88,7 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         merged_data.reset_index().to_csv(file_path, index=False, columns=columns_to_save)
 
     else:
-        print(df)
-        if interval == '1d':
+        if interval in ['1d', '1wk']:
             df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai').dt.strftime('%Y-%m-%d')
         df.to_csv(file_path, index=False, columns=columns_to_save)
 
@@ -101,10 +108,7 @@ def should_download(symbol:Symbol, file_path:str):
         # Check if the file was modified in the last hour (3600 seconds)
         if current_time - last_modified_time < file_expire_seconds:
             return False
-        else:
-            return True
-    else:
-        return True
+    return True
 
 def is_night_time():
     # Get the current time
@@ -138,6 +142,7 @@ if __name__ == "__main__":
         else:
             symbols = getAll(db_sess)
       
+    start_time = datetime.now()
     # Use ThreadPoolExecutor to download data concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers= max_concurrent_downloads) as executor:
         # Submit download tasks
@@ -146,4 +151,8 @@ if __name__ == "__main__":
         # Wait for all tasks to complete
         concurrent.futures.wait(futures)
 
-    logger.info("All downloads completed.")
+
+    end_time = datetime.now()
+
+    total_time_seconds = (end_time - start_time).total_seconds()
+    logger.info(f"All downloads completed. Total time: {total_time_seconds:.2f} seconds") 

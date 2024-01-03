@@ -58,8 +58,7 @@ class BaseStrategy(bt.Strategy):
         self.volume_sma5 = bt.indicators.SimpleMovingAverage(self.data.volume, period=5)
         self.volume_sma10 = bt.indicators.SimpleMovingAverage(self.data.volume, period=10)
         self.volume_sma30 = bt.indicators.SimpleMovingAverage(self.data.volume, period=30)
-
-       
+  
         
    
     

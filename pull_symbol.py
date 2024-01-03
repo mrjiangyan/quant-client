@@ -5,11 +5,44 @@ import os
 from data.service.symbol_service import get_by_symbol
 from data import database
 import math
+import tagui as t
+import shutil
+def find_recently_added_file(folder_path, prefix="nasdaq_", extension=".csv"):  
+    files = []
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        # 检查文件名前缀、后缀和创建时间
+        if filename.startswith(prefix) and filename.endswith(extension):
+            files.append(file_path)
+
+    # 根据文件创建时间从新到旧排序
+    files.sort(key=lambda x: os.path.getctime(os.path.join(folder_path, x)), reverse=True)
+
+    if files:
+        return files[0]
+    else:
+        return None
+    
+t.init()
+t.url('https://www.nasdaq.com/market-activity/stocks/screener')
+t.click('.nasdaq-screener__form-button--download.ns-download-1')
+t.wait()
+t.close()
+# 替换成你的文件夹路径
+folder_path = os.getcwd()
+filename = find_recently_added_file(folder_path)
+print("最近新增的文件:", filename)
+# Get the current working directory
+current_directory = os.getcwd()
+
+new_file_path = os.path.join(current_directory ,  'resources','screener',  "nasdaq_latest.csv")
+shutil.move(filename, new_file_path)
+
 
  # 必须要通过app上下文去启动数据库
 database.global_init("edge.db")
 
-local_path = "nasdaq_screener_1702257238390.csv"
+local_path = "nasdaq_latest.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
@@ -52,8 +85,8 @@ with database.create_session() as db_sess:
                 domain.shares_outstanding = int(market_cap / float(domain.last_price))
             else:
                 domain.shares_outstanding = 0
-            domain.change = row['% Change'].replace('%','')
-           
+            if row['% Change']:
+                domain.change = str(row['% Change']).replace('%','')
             if is_create == False:
                 # 如果记录已经存在于数据库中，使用 merge 进行更新
                 db_sess.merge(domain)
