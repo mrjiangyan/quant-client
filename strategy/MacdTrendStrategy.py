@@ -34,4 +34,3 @@ class MacdTrendStrategy(BaseStrategy):
                 self.log(f'K:{self.K[0]:.3f},D:{self.D[0]:.3f},J:{self.J[0]:.3f}')
                 self.log(f"DIF: {current_diff}, DEA: {current_dea}")
   
-

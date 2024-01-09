@@ -19,10 +19,6 @@ class BollingerStrategy(BaseStrategy):
         self.filtered_dates = []
         self.consecutive_down_days = 0  # 用于追踪连续阴线的数量
         
-        self.cup_handle_indicator = bt.indicators.CupHandle(depth_pct_cup=self.params.cup_depth_percentage,
-                                                            depth_pct_handle=self.params.handle_depth_percentage)
-
-
     def has_highest_price_touched_upper_band(self, lookback_days):
         # 获取过去 lookback_days 的最高价
         high_prices = [self.data.high.get(ago=-i, size=1)[0] for i in range(0, lookback_days)]

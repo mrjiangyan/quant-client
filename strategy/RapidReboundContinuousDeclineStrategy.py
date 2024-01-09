@@ -174,7 +174,6 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
                 self.log(f'成交量均线:5D:{self.volume_sma5[0]:.0f},10D:{self.volume_sma10[0]:.0f},30D:{self.volume_sma30[0]:.0f}')
             
         if buy_signal and not self.position and self.internal_buy():
-              
                 days = self.consecutive_decline_days 
                 self.reset()
                 self.print_detail(days)

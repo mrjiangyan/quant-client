@@ -1,12 +1,13 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 class BaseStrategy(bt.Strategy):
     params = (
         ("name", None),
         ("symbol", None),
+        ("shared_variable", [False]),
         ("start_date", None),
         ("end_date", None),
         ("percent_of_cash", 0.9),
@@ -20,6 +21,10 @@ class BaseStrategy(bt.Strategy):
         ("rsi_oversold", 30),  # RSI超卖阈值
         ("sell_cross", True),  # 是否根据死叉卖出
     )
+    
+    def is_decline(self):
+        return self.data_close < self.data_open and (self.data_close[0] - self.data_close[-1])/ self.data_close[-1] < 0.02
+       
 
     def convert_params_to_dict(self) -> Dict[str, Any]:
         return dict(self.params)
@@ -59,7 +64,9 @@ class BaseStrategy(bt.Strategy):
         self.volume_sma10 = bt.indicators.SimpleMovingAverage(self.data.volume, period=10)
         self.volume_sma30 = bt.indicators.SimpleMovingAverage(self.data.volume, period=30)
   
-        
+        self.SMA_5 = bt.indicators.SimpleMovingAverage(self.data.close, period=5)
+        self.SMA_10 = bt.indicators.SimpleMovingAverage(self.data.close, period=10)
+        self.SMA_30 = bt.indicators.SimpleMovingAverage(self.data.close, period=30)
    
     
     def check_allow_sell_or_buy(self):
@@ -115,6 +122,7 @@ class BaseStrategy(bt.Strategy):
         self.sell(size= position_size)
         self.last_sell_day = self.datas[0].datetime.date(0)
         return True
+    
     def notify_order(self, order):
         self.order = order
         if order.status in [order.Submitted, order.Accepted]:
@@ -125,6 +133,7 @@ class BaseStrategy(bt.Strategy):
                 self.last_sell_day = None
                 self.log(f"买入日期: {execution_date}, 开盘价: {self.buy_date_data['open']:.2f}, 最高价: {self.buy_date_data['high']:.2f}, 最低价: {self.buy_date_data['low']:.2f}, 收盘价: {self.buy_date_data['close']:.2f}, 交易量: {self.buy_date_data['volume']:.2f}")
                 self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f}")
+                
             elif order.issell():
                 self.log(f"卖出日期: {execution_date}, 开盘价: {self.sell_date_data['open']:.2f}, 最高价: {self.sell_date_data['high']:.2f}, 最低价: {self.sell_date_data['low']:.2f}, 收盘价: {self.sell_date_data['close']:.2f}, 交易量: {self.sell_date_data['volume']:.2f}")
                 self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f}")
@@ -134,7 +143,6 @@ class BaseStrategy(bt.Strategy):
 
        
         
-        
     def print_macd(self):
         self.log(f'MACD DIF:{self.macd.macd[0]}, DEA:{self.macd.signal[0]}, MACD:{self.macd.macd - self.macd.signal}')
     
@@ -143,12 +151,23 @@ class BaseStrategy(bt.Strategy):
     
     def print_rsi(self):
         self.log(f'RSI1:{self.rsi[0]:.3f}')
+        
+    def print_turnover_rate(self, volume:int):
+        if self.params.symbol.shares_outstanding and self.params.symbol.shares_outstanding != 0:
+            self.log(f'换手率:{(volume*100)/self.params.symbol.shares_outstanding:.2f}')
     
     def print_bolling(self):
         self.log("布林线: 上轨: {:.2f}, 中轨: {:.2f}, 下轨: {:.2f}".format(
                         self.bollinger.lines.top[0],
                         self.bollinger.lines.mid[0],
                         self.bollinger.lines.bot[0]
+                    ))
+        
+    def print_sma(self):
+            self.log("均线: 5天: {:.2f}, 10天: {:.2f}, 30天: {:.2f}".format(
+                        self.SMA_5[0],
+                        self.SMA_10[0],
+                        self.SMA_30[0]
                     ))
 
     def calculate_profit_percentage(self):

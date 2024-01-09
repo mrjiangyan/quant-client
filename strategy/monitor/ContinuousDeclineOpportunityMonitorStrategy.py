@@ -46,10 +46,9 @@ class ContinuousDeclineOpportunityMonitorStrategy(RapidReboundContinuousDeclineS
             self.log(f'{self.data.datetime.date(0)}连续下跌天数:{self.consecutive_decline_days}')
             if self.first_day_close !=0:
                 self.log(f'连续下跌百分比:{(self.first_day_close - self.data_close) / self.first_day_close}')
-            self.log(f'监测日-MACD: DIF:{self.macd.macd[0]}, DEA:{self.macd.signal[0]}, MACD:{self.macd.macd - self.macd.signal}')
             # 打印每日开盘、收盘、最高、最低价格以及成交量
             log_content = ''
-            
+            self.print_macd()
             for i in range(-self.consecutive_decline_days, 1):
                     log_content += f"Date: {self.data.datetime.date(i)} | "
                     log_content += f"开盘: {self.data.open[i]:.2f} | "

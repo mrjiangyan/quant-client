@@ -1,7 +1,7 @@
 # 导入所需模块
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 from typing import Dict, Any, Tuple
-
+import sys
 
 import datetime  # 日期时间模块
 import os.path  # 路径模块
@@ -19,6 +19,7 @@ from loguru import logger
 import importlib
 import inspect
 from strategy.BaseStrategy import BaseStrategy
+from strategy.executor import BuyExecutor
 
 current_working_directory = os.getcwd()
 
@@ -87,8 +88,14 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
         cerebro = bt.Cerebro(stdstats = False, maxcpus =None)
         # cerebro = bt.Cerebro(cheat_on_close = True)
         # cerebro.broker_set_coc(True) 
+        
+        shared_var = [False] 
         # 将策略实例添加到Cerebro中
-        cerebro.addstrategy(strategy_cls, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
+        cerebro.addstrategy(strategy_cls, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
+
+        # Add the first strategy to the engine with the shared variable
+        # cerebro.addstrategy(BuyExecutor, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
+
         cerebro.broker.setcommission(commission=0.002) 
         cerebro.broker.set_cash(cash=cash)
         cerebro.broker.set_slippage_perc(0.01)
@@ -198,7 +205,7 @@ def select_strategy():
 
 
 if __name__ == '__main__':
-    
+
 
     input_symbol = None
     input_symbol = input(f"请输入需要回测的证券代码以空格分割（默认为全部）: ") or input_symbol
@@ -218,7 +225,7 @@ if __name__ == '__main__':
  
     print(strategy_cls)
 
-    output_path = os.path.join(current_working_directory, 'output', strategy_cls.__name__,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
+    output_path = os.path.join(current_working_directory, 'output', strategy_cls.params.name,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
 
     if not os.path.exists(output_path):
         # 不存在则创建
