@@ -14,8 +14,10 @@ class MacdStrategy(BaseStrategy):
         ('oversold_threshold', 40),
     )
 
-    def __init__(self):
-        super().__init__()  # 调用父类的构造函数
+    def __init__(self, *argv):
+    
+        # used to modify parameters
+        super().__init__(argv[0])
        
        
         self.close_prices = self.data.close.get(size=15)  # 获取最近15天的收盘价

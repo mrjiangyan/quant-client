@@ -3,16 +3,16 @@
 from flask import make_response, jsonify
 from gevent import pywsgi
 import traceback
-
+from auth import auth
 import monitor
-
+from rest.ApiResult import error_message
 from flask import Flask
 from flask_cors import CORS
 from loguru import logger
 import os
 import faulthandler
 from data import database
-
+from rest.strategy import strategy_api
 faulthandler.enable()
 
 def create_app():
@@ -24,15 +24,14 @@ def create_app():
     register_api(app)
 
     app.config['JSON_AS_ASCII'] = False
-    # app.after_request(auth.after_request)
-    # app.before_request(auth.jwt_authentication)
-
+    app.after_request(auth.after_request)
+    app.before_request(auth.jwt_authentication)
     # app.config.from_object(config)
 
     # 注册日志
     config_logging()
     # 添加定时任务
-    monitor.start_monitor()
+    # monitor.start_monitor()
     # add_task()
     # 解决跨域问题
     CORS(app)
@@ -42,7 +41,7 @@ def create_app():
 def register_api(app):
     # 添加api接口到
     print('register_api')
-    # app.register_blueprint(index.blueprint)
+    app.register_blueprint(strategy_api.blueprint)
     # app.register_blueprint(system_api.blueprint)
 
 
@@ -64,7 +63,7 @@ def not_found(error):
 @app.errorhandler(Exception)
 def error_handler(e):
     logger.error(traceback.format_exc())
-    # return error_message(str(e))
+    return error_message(str(e))
 
 
 if __name__ == '__main__':

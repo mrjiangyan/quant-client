@@ -1,7 +1,5 @@
 # 导入所需模块
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-from typing import Dict, Any, Tuple
-import sys
 
 import datetime  # 日期时间模块
 import os.path  # 路径模块
@@ -90,7 +88,7 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
         
         shared_var = [False] 
         # 将策略实例添加到Cerebro中
-        cerebro.addstrategy(strategy_cls, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
+        cerebro.addstrategy(strategy_cls, {}, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
 
         # Add the first strategy to the engine with the shared variable
         # cerebro.addstrategy(BuyExecutor, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)

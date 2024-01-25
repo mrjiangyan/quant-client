@@ -1,8 +1,6 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 
-from typing import Dict, Any
-
 class BaseStrategy(bt.Strategy):
     params = (
         ("name", None),
@@ -32,6 +30,9 @@ class BaseStrategy(bt.Strategy):
         # Set UI modified parameters
         if parameters != None:
             for parameterName, parameterValue in parameters.items():
+                setattr(self.params, parameterName, parameterValue)
+        else:
+            for parameterName, parameterValue in self.params.items():
                 setattr(self.params, parameterName, parameterValue)
                 
         self.order = None  # 用于存储订单对象的属性
@@ -160,6 +161,10 @@ class BaseStrategy(bt.Strategy):
         if self.params.symbol.shares_outstanding and self.params.symbol.shares_outstanding != 0:
             self.log(f'换手率:{(volume*100)/self.params.symbol.shares_outstanding:.2f}')
     
+    def turnover_rate(self, volume:int):
+        if self.params.symbol.shares_outstanding and self.params.symbol.shares_outstanding != 0:
+            return (volume*100)/self.params.symbol.shares_outstanding
+        return 0
     def print_bolling(self):
         self.log("布林线: 上轨: {:.2f}, 中轨: {:.2f}, 下轨: {:.2f}".format(
                         self.bollinger.lines.top[0],

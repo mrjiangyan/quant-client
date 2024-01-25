@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 from .BaseStrategy import BaseStrategy
-
+from loguru import logger
 # 交易策略
 
 # 回顾一下海龟交易法则的策略思路：
@@ -50,12 +50,14 @@ class TurtleStrategy(BaseStrategy):
             self.buy_size = self.broker.getvalue() * 0.01 / self.ATR            
             self.buy_size  = int(self.buy_size  / 100) * 100                             
             self.sizer.p.stake = self.buy_size             
-            self.buy_count = 1 
             buy_signal =  self.data.close[0] < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
-                    and self.SMA_5[0] > self.SMA_10[0] \
+                    and round(self.SMA_5[0],2) > round(self.SMA_10[0],2) > round(self.SMA_15[0],2) \
                     and 0.01 < (self.SMA_5[0]-self.SMA_30[0])/self.SMA_30[0] < 0.2 \
-                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] 
-            if buy_signal and self.internal_buy():        
+                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
+                    and self.turnover_rate(self.data.volume[0]) < 25
+                
+            if buy_signal and self.internal_buy():     
+                print(self.data.volume[0], self.turnover_rate(self.data.volume[0]))   
                 self.buy_count += 1    
                 self.print_kdj()
                 self.print_bolling()
@@ -64,15 +66,18 @@ class TurtleStrategy(BaseStrategy):
                 self.print_rsi()
                 self.print_turnover_rate(self.data.volume[0])          
         #加仓：价格上涨了买入价的0.5的ATR且加仓次数少于3次（含）        
-        elif self.data.close > self.buyprice+0.5*self.ATR[0] and self.buy_count > 0 and self.buy_count <=4:           
+        elif self.data.close > self.buyprice+0.5*self.ATR[0] and self.buy_count > 0 and self.buy_count <=4:   
+                    
             self.buy_size  = self.broker.getvalue() * 0.01 / self.ATR            
             self.buy_size  = int(self.buy_size  / 100) * 100            
             self.sizer.p.stake = self.buy_size      
-            buy_signal =  self.SMA_15[0] < self.data.close[0] < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
-                    and self.SMA_5[0] > self.SMA_10[0] \
+            buy_signal =  self.data.close[0] < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
+                    and round(self.SMA_5[0],2) > round(self.SMA_10[0],2) > round(self.SMA_15[0],2) \
                     and 0.01 < (self.SMA_5[0]-self.SMA_30[0])/self.SMA_30[0] < 0.2 \
-                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] 
-            if buy_signal and self.internal_buy():        
+                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
+                    and self.turnover_rate(self.data.volume[0]) < 25
+            if buy_signal and self.internal_buy():    
+                logger.info(f'{self.data.volume[0]}, {self.turnover_rate(self.data.volume[0])}')  
                 self.buy_count += 1    
                 self.print_kdj()
                 self.print_bolling()
