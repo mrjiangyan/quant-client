@@ -24,17 +24,19 @@ class BaseStrategy(bt.Strategy):
     
     def is_decline(self):
         return self.data_close < self.data_open and (self.data_close[0] - self.data_close[-1])/ self.data_close[-1] < 0.02
-       
-
-    def convert_params_to_dict(self) -> Dict[str, Any]:
-        return dict(self.params)
 
     def get_params(self):
         return self.convert_params_to_dict()
     
-    def __init__(self):
+    def __init__(self, parameters = None):
+        # Set UI modified parameters
+        if parameters != None:
+            for parameterName, parameterValue in parameters.items():
+                setattr(self.params, parameterName, parameterValue)
+                
         self.order = None  # 用于存储订单对象的属性
           # Add your MACD indicator here
+        self.trade = None
         self.macd = bt.indicators.MACD()
         self.rsi = bt.indicators.RSI(self.datas[0])
         self.buy_date_data = None
@@ -66,11 +68,13 @@ class BaseStrategy(bt.Strategy):
   
         self.SMA_5 = bt.indicators.SimpleMovingAverage(self.data.close, period=5)
         self.SMA_10 = bt.indicators.SimpleMovingAverage(self.data.close, period=10)
+        self.SMA_15 = bt.indicators.SimpleMovingAverage(self.data.close, period=15)
         self.SMA_30 = bt.indicators.SimpleMovingAverage(self.data.close, period=30)
+        self.SMA_60 = bt.indicators.SimpleMovingAverage(self.data.close, period=60)
    
     
     def check_allow_sell_or_buy(self):
-        if self.params.start_date() and  self.params.end_date():
+        if self.params.start_date() and self.params.end_date():
             current_date = self.data.datetime.date(0)
             return self.params.start_date() <= current_date <= self.params.end_date()
         return True
@@ -132,11 +136,11 @@ class BaseStrategy(bt.Strategy):
             if order.isbuy():
                 self.last_sell_day = None
                 self.log(f"买入日期: {execution_date}, 开盘价: {self.buy_date_data['open']:.2f}, 最高价: {self.buy_date_data['high']:.2f}, 最低价: {self.buy_date_data['low']:.2f}, 收盘价: {self.buy_date_data['close']:.2f}, 交易量: {self.buy_date_data['volume']:.2f}")
-                self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f}")
+                self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f},手续费{order.executed.comm:.2f}")
                 
             elif order.issell():
                 self.log(f"卖出日期: {execution_date}, 开盘价: {self.sell_date_data['open']:.2f}, 最高价: {self.sell_date_data['high']:.2f}, 最低价: {self.sell_date_data['low']:.2f}, 收盘价: {self.sell_date_data['close']:.2f}, 交易量: {self.sell_date_data['volume']:.2f}")
-                self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f}")
+                self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},手续费{order.executed.comm:.2f}")
         # Check if an order has been canceled/rejected
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('订单取消/拒绝')
@@ -164,10 +168,12 @@ class BaseStrategy(bt.Strategy):
                     ))
         
     def print_sma(self):
-            self.log("均线: 5天: {:.2f}, 10天: {:.2f}, 30天: {:.2f}".format(
+            self.log("均线: 5天: {:.2f}, 10天: {:.2f}, 15天: {:.2f}, 30天: {:.2f}, 60天:{:.2f}".format(
                         self.SMA_5[0],
                         self.SMA_10[0],
-                        self.SMA_30[0]
+                        self.SMA_15[0],
+                        self.SMA_30[0],
+                        self.SMA_60[0]
                     ))
 
     def calculate_profit_percentage(self):
@@ -189,8 +195,9 @@ class BaseStrategy(bt.Strategy):
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
+        self.trade = trade
         # print(trade)
-        # self.log(f'交易盈亏: 毛盈亏 {trade.pnl}, 净盈亏 {trade.pnlcomm}')
+        self.log(f'交易盈亏: 毛盈亏 {trade.pnl:.2f}, 净盈亏 {trade.pnlcomm:.2f}')
 
     # def next(self):
     #     self.auto_sell()

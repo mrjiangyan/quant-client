@@ -91,13 +91,12 @@ def download_yahoo(symbol:Symbol, period, interval, file_path):
         if interval in ['1d', '1wk']:
             df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai').dt.strftime('%Y-%m-%d')
         if interval == '1m':
-            df['Date'] = pd.to_datetime(df['date'])
-
+            df['Date'] = pd.to_datetime(df[index_col], utc= True).dt.tz_convert('Asia/Shanghai')
             # 使用 tail(1) 获取最后一行记录
             last_row = df.tail(1)
 
             # 通过列名获取 date 字段的日期部分的值
-            last_date_str = last_row['date'].dt.strftime('%Y-%m-%d').iloc[0]
+            last_date_str = last_row['Date'].dt.strftime('%Y-%m-%d').iloc[0]
             file_prefix, file_extension = os.path.splitext(file_path)
             # 构建新的文件名
             file_path = f"{file_prefix}_{last_date_str}{file_extension}"
@@ -109,8 +108,8 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
         
-    if symbol.last_price < 1 or symbol.last_price > 50:
-        return False
+    # if symbol.last_price < 1 or symbol.last_price > 50:
+    #     return False
      
     if is_night_time():
         return True
@@ -119,7 +118,6 @@ def should_download(symbol:Symbol, file_path:str):
         last_modified_time = os.path.getmtime(file_path)
         # Get the current time
         current_time = datetime.now().timestamp()
-
         # Check if the file was modified in the last hour (3600 seconds)
         if current_time - last_modified_time < file_expire_seconds:
             return False

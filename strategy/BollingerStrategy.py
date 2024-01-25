@@ -14,8 +14,9 @@ class BollingerStrategy(BaseStrategy):
         ("handle_depth_percentage", 5),  # 柄部深度百分比
     )
 
-    def __init__(self):
-        super().__init__()  # 调用父类的构造函数
+    def __init__(self, *argv):
+        # used to modify parameters
+        super().__init__(argv[0])
         self.filtered_dates = []
         self.consecutive_down_days = 0  # 用于追踪连续阴线的数量
         

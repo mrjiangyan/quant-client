@@ -19,7 +19,6 @@ from loguru import logger
 import importlib
 import inspect
 from strategy.BaseStrategy import BaseStrategy
-from strategy.executor import BuyExecutor
 
 current_working_directory = os.getcwd()
 
@@ -155,8 +154,11 @@ def analyze_returns(symbol_returns):
     symbol_individual_returns = {}
     log_file_path = os.path.join(output_path, f'_summary.log')
     
-    print(log_file_path)
+    
     with open(log_file_path, 'a') as f:
+        #输出选择的参数
+        f.write(f"起始时间: {start_datetime}")
+        f.write('\n')
         for symbol, returns in symbol_returns.items():
             if isinstance(returns, Exception):
                 print(f"Exception occurred for symbol {symbol.symbol}: {returns}")

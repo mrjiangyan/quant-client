@@ -26,7 +26,7 @@ def create_app():
     app.config['JSON_AS_ASCII'] = False
     # app.after_request(auth.after_request)
     # app.before_request(auth.jwt_authentication)
-  
+
     # app.config.from_object(config)
 
     # 注册日志

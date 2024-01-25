@@ -17,8 +17,9 @@ class IncreasedTradingVolumeStrategy(BaseStrategy):
         ("sell_gain_percentage", [0.3, 0.2, 0.15]),  # 涨幅达到20%时卖出
     )
 
-    def __init__(self):
-        super().__init__()  # 调用父类的构造函数
+    def __init__(self, *argv):
+        # used to modify parameters
+        super().__init__(argv[0])
         self.volume = self.data.volume
         self.average_volume = bt.indicators.SimpleMovingAverage(self.volume, period=self.params.average_volume_period)
         self.consecutive_decline_days = 0

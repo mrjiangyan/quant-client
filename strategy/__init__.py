@@ -5,4 +5,4 @@ from .MacdTrendStrategy import MacdTrendStrategy
 from .RapidReboundContinuousDeclineStrategy import RapidReboundContinuousDeclineStrategy
 from .monitor.__init__ import ContinuousDeclineOpportunityMonitorStrategy
 from .IncreasedTradingVolumeStrategy import IncreasedTradingVolumeStrategy
-from .SmaStrategy import SmaStrategy
+from .TurtleStrategy import TurtleStrategy

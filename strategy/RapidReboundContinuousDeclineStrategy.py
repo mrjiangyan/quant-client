@@ -6,9 +6,8 @@ from .BaseStrategy import BaseStrategy
 class RapidReboundContinuousDeclineStrategy(BaseStrategy):
     params = (
         ("name", '连续阴线快速下跌买入策略'), 
-     
-        ("decline_percentage", 0.28),  # 下跌幅度
-        ("consecutive_decline_days_config", 6),  # 连续下跌天数
+        ("decline_percentage", 0.6),  # 下跌幅度
+        ("consecutive_decline_days_config", 5),  # 连续下跌天数
         ("volume_shrink_percentage", 0.80),  # 量能萎缩百分比
         ("sell_cross", True),  # 是否根据死叉卖出
         ("sell_gain_percentage", [0.3, 0.2, 0.15]),  # 涨幅达到20%时卖出
@@ -16,8 +15,9 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
         ("day_decline_percentage", 0.4), #日最大跌幅限制
     )
 
-    def __init__(self):
-        super().__init__()  # 调用父类的构造函数
+    def __init__(self, *argv):
+            # used to modify parameters
+        super().__init__(argv[0])
         # 添加用于判断连续下跌的变量
         self.consecutive_decline_days = 0
         self.data_close = self.data.close
@@ -32,10 +32,10 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
         decline_ratio = (self.first_day_close - self.data_close) / self.first_day_close
         #如果是最高位的下跌，需要下跌50%以上
         if self.is_highest_close_30(self.consecutive_decline_days):
-            return decline_ratio > 0.5
+            return decline_ratio > 0.6
         # 添加连续下跌的判断条件，比较下跌百分比与第一天下跌的收盘价
     #    return (self.first_day_close - self.data_close) / self.first_day_close > self.params.decline_percentage
-        return decline_ratio >  self.consecutive_decline_days * 0.05 
+        return decline_ratio >  self.params.decline_percentage
         
     def is_decline(self):
        return self.data_close < self.data_open and (self.data_close[0] - self.data_close[-1])/ self.data_close[-1] < 0.02
@@ -155,11 +155,11 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
             buy_signal =  False
         
         #需要买入日期的成交量不能大于50万  
-        if buy_signal and (self.data.volume[0] > 40 * 10000):
-            # self.reset()
-            print('buy_signal and ({self.data.volume[0]:.0f} > 40 * 10000)')
-            return
-        buy_signal =  buy_signal and self.data_close[0] > 0.7
+        # if buy_signal and (self.data.volume[0] > 40 * 10000):
+        #     # self.reset()
+        #     print('buy_signal and ({self.data.volume[0]:.0f} > 40 * 10000)')
+        #     return
+        # buy_signal =  buy_signal
        
         
         if buy_signal:
