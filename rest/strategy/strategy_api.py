@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-import json
-import uuid
 
 import flask
 import importlib
@@ -41,7 +39,7 @@ from auth.auth import login_required
 # from data.request.business_engine.sop_flow_device_update_form import SOPFlowDeviceUpdateForm
 
 # from monitor.camera_monitor import do_write_protocol_json
-from rest.ApiResult import ApiResult, error_message
+from rest.ApiResult import ApiResult, error_message, success
 # from rest.device.device_api import is_exist_device
 # from rest.device.monitoring_area_api import is_exist_monitoring_areas
 
@@ -51,11 +49,17 @@ blueprint = flask.Blueprint(
 )
 
 
-
-
-# 获取业务引擎列表
-# @login_required
+# 获取策略列表
+@login_required
 @blueprint.route('/api/strategy/list', methods=['GET'])
-def business_engine_list(): 
-    return ApiResult(strategy_objects).to_json()
+def list(): 
+    page_result = {
+        "current": 1,
+        "total": len(strategy_objects),
+        "size": len(strategy_objects),
+        "pages": 1,
+        "records": strategy_objects
+    }
+    return success(page_result)
+    # return ApiResult(strategy_objects).to_json()
 

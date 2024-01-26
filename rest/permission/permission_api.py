@@ -138,18 +138,18 @@ def getUserPermissionByToken():
             },
             {
                 "redirect": None,
-                "path": "/base/system/position1",
-                "component": "system/position/index",
+                "path": "/quant/strategy",
+                "component": "quant/strategy/index",
                 "route": "1",
                 "meta": {
                     "keepAlive": False,
                     "internalOrExternal": False,
                     "icon": "ant-design:tag-twotone",
                     "componentName": "index",
-                    "title": "岗位管理"
+                    "title": "策略管理"
                 },
                 "homepageFlag": 0,
-                "name": "base-system-position1",
+                "name": "quant-strategy",
                 "id": "1649950945614311425",
                 "isNavigation": False
             },
