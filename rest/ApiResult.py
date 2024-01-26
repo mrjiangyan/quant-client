@@ -9,7 +9,7 @@ import traceback
 class ApiResult:
     def __init__(self, data, status=0, message='ok', success = True):
         self.data = data
-        self.status = status
+        self.code = status
         self.success = success
         self.message = message
 
