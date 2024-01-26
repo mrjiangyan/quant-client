@@ -9,5 +9,8 @@ apscheduler==3.10.4
 flask-cors==4.0.0
 retrying==1.3.4
 pyfolio==0.9.2
-tagui==1.50.0
 pymysql==1.1.0
+robotframework-seleniumlibrary==6.2.0
+certifi==2023.11.17
+rpaframework==24.1.2
+robotframework-browser
