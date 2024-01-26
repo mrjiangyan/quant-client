@@ -12,7 +12,7 @@ from loguru import logger
 import os
 import faulthandler
 from data import database
-from rest.strategy import strategy_api
+from rest import register_api
 faulthandler.enable()
 
 def create_app():
@@ -37,12 +37,6 @@ def create_app():
     CORS(app)
     return app
 
-
-def register_api(app):
-    # 添加api接口到
-    print('register_api')
-    app.register_blueprint(strategy_api.blueprint)
-    # app.register_blueprint(system_api.blueprint)
 
 
 def config_logging():
