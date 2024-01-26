@@ -17,13 +17,15 @@ faulthandler.enable()
 
 def create_app():
     app = Flask(__name__)
-
+   
      # 必须要通过app上下文去启动数据库
     database.global_init("edge.db")
     # 添加api接口到
     register_api(app)
 
     app.config['JSON_AS_ASCII'] = False
+    app.config['SECRET_KEY'] = 'your_secret_key_here'  # 设置一个安全的密钥
+
     app.after_request(auth.after_request)
     app.before_request(auth.jwt_authentication)
     # app.config.from_object(config)

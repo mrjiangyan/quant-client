@@ -1,30 +1,27 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-import json
-import uuid
+import math
+from flask import request, Blueprint
+from sqlalchemy import or_
+from sqlalchemy import asc, desc
 
-import flask
-
-import logging
 from auth.auth import login_required
-# from data import database
+from data import database
+from .symbol_query_form import SymbolQueryForm
+from .symbol_form import SymbolModifyForm
 # from data.model.business_engine import BusinessEngine
-# from data.model.device import Device
+from data.model.t_symbol import Symbol
+from data.service.symbol_service import get_by_symbol
 # from data.model.device_monitoring_area import DeviceMonitoringArea
 # from data.model.engine_device_area import EngineDeviceArea
 # from data.model.sop_flow_process import SOPFlowProcess
 # from data.request.business_engine.basic_model_area_update_form import BasicModelAreaUpdateForm
-# from data.request.business_engine.business_engine_device_add_form import BusinessEngineDeviceAddForm
-# from data.request.business_engine.sop_flow_device_area_update_form import SOPFlowDeviceAreaUpdateForm
-# from data.request.business_engine.sop_flow_device_update_form import SOPFlowDeviceUpdateForm
 
 # from monitor.camera_monitor import do_write_protocol_json
-from rest.ApiResult import ApiResult, error_message
-# from rest.device.device_api import is_exist_device
-# from rest.device.monitoring_area_api import is_exist_monitoring_areas
+from rest.ApiResult import ApiResult, error_message, success
 
-blueprint = flask.Blueprint(
+blueprint = Blueprint(
     'symbol_api',
     __name__
 )
@@ -32,9 +29,137 @@ blueprint = flask.Blueprint(
 
 
 
-# 获取业务引擎列表
-# @login_required
+# 获取列表
+@login_required
 @blueprint.route('/api/symbol/list', methods=['GET'])
-def business_engine_list(): 
-    return ApiResult([]).to_json()
+def list(): 
+    try:
+        form = SymbolQueryForm(request.args)
+    except Exception as err:
+        return error_message(str(err))
 
+    db_sess = database.create_session()
+
+    symbol_query = db_sess.query(Symbol)
+
+    filterList = []
+
+    if form.symbol.data:
+        filterList.append(Symbol.symbol == form.symbol.data )
+    if form.keyword.data:
+        filterList.append(or_(Symbol.name.like(f'%{form.keyword.data}%'), Symbol.symbol.like(f'%{form.keyword.data}%')))
+    if form.market.data is not None:
+        filterList.append(Symbol.market == form.market.data  )
+    if form.country.data is not None:
+        filterList.append(Symbol.country== form.country.data )
+
+    page_size = form.pageSize.data
+    page_no = form.pageNo.data
+    offset = get_offset(page_no, page_size)
+    if form.order.data == 'asc':
+        sort_expression = asc(getattr(Symbol, form.column.data))
+    else:
+        sort_expression = desc(getattr(Symbol, form.column.data))
+
+    record_list = symbol_query.filter(*filterList).order_by(sort_expression).offset(offset).limit(form.pageSize.data).all()
+
+    record_count = symbol_query.filter(*filterList).count()
+
+    page_result = {
+        "current": page_no,
+        "total": record_count,
+        "size": page_size,
+        "pages": math.ceil(record_count/page_size),
+        "records": [item.to_dict() for item in record_list]
+    }
+    return ApiResult(page_result).to_json()
+
+# 查询单个信息
+@login_required
+@blueprint.route('/api/symbol/<string:symbol>/<string:market>', methods=['GET'])
+def get_symbol(symbol, market):
+    db_sess = database.create_session()
+
+    symbol = get_by_symbol(db_sess, symbol, market)
+
+    if symbol is None:
+        return error_message(f'不存在该symbol:{symbol}')
+    return success(symbol.to_dict())
+
+# 屏蔽
+@login_required
+@blueprint.route('/api/symbol/disable', methods=['PUT'])
+def disable(): 
+    try:
+        form = SymbolModifyForm().validate_for_api()
+    except Exception as err:
+        return error_message(str(err))
+
+    db_sess = database.create_session()
+
+    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
+
+    if symbol is None:
+        return error_message(f'不存在该symbol:{form.symbol.data}')
+    
+    symbol.compute = False
+    db_sess.merge(symbol)
+    db_sess.commit()
+    return success(message='屏蔽成功')
+
+# 取消屏蔽
+@login_required
+@blueprint.route('/api/symbol/enabled', methods=['PUT'])
+def enable(): 
+    try:
+        form = SymbolModifyForm().validate_for_api()
+    except Exception as err:
+        return error_message(str(err))
+
+    db_sess = database.create_session()
+
+    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
+
+    if symbol is None:
+        return error_message(f'不存在该symbol:{form.symbol.data}')
+    
+    symbol.compute = True
+    db_sess.merge(symbol)
+    db_sess.commit()
+    return success(message='取消屏蔽成功')
+    
+# 进行编辑操作
+@login_required
+@blueprint.route('/api/symbol', methods=['PUT'])
+def update(): 
+    try:
+        form = SymbolModifyForm().validate_for_api()
+    except Exception as err:
+        return error_message(str(err))
+
+    db_sess = database.create_session()
+
+    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
+
+    if symbol is None:
+        return error_message(f'不存在该symbol:{form.symbol.data}')
+    
+    print(symbol)
+    symbol.cn_name = form.cn_name.data
+    print(symbol.cn_name)
+    db_sess.merge(symbol)
+    db_sess.commit()
+    return success(message='编辑成功')
+    
+   
+    
+
+# 分页查询
+def get_offset(page_index, page_size):
+    if page_index < 1:
+        page_index == 1
+
+    if page_size < 1:
+        page_size = 20
+
+    return (page_index - 1) * page_size

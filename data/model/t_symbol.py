@@ -12,6 +12,7 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     symbol = Column("symbol", String, primary_key=True)
     market = Column("market", String, index=True,doc="所在市场")
     name = Column("name", String, doc="名称")
+    cn_name = Column("cn_name", String, doc="中文名称")
     last_price = Column("last_price", Float,  doc="最后价格")
     ipo_year = Column("ipo_year", Integer, index=True, doc="IPO年份")
     country = Column("country", String, index=True, doc="所属国家")
@@ -21,7 +22,7 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     # 股票数量
     shares_outstanding = Column("shares_outstanding", Integer, doc="总股本")
     change = Column("change", Float, doc="涨跌幅度")
-    compute = Column("compute", Boolean, index=True, doc="是否计算")
+    compute = Column("compute", Boolean, index=True, doc="屏蔽")
     gmtUpdate = Column("gmt_update", DateTime, default=func.now(), onupdate=func.now(), doc="更新时间")
    
     

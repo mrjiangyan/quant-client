@@ -1,7 +1,7 @@
 from flask import request, current_app
 
 import datetime
-from jwt import jwt, exceptions
+# from jwt import jwt, exceptions
 import functools
 
 SALT = 'iv%i6xo7l8_t9bf_u!8#g#m*)*+ej@bek6)(@u3kh*42+unjv='
@@ -26,8 +26,8 @@ def create_token(username, password):
         'password': password,  # 自定义用户ID
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)  # 超时时间
     }
-    result = jwt.encode(payload=payload, key=SALT, algorithm="HS256", headers=headers).decode('utf-8')
-    return result
+    # result = jwt.encode(payload=payload, key=SALT, algorithm="HS256", headers=headers).decode('utf-8')
+    # return result
 
 
 def verify_jwt(token, secret=None):

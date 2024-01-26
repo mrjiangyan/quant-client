@@ -4,14 +4,15 @@
 from flask import jsonify
 
 import traceback
-
+import time
 
 class ApiResult:
-    def __init__(self, data, status=0, message='ok', success = True):
-        self.data = data
+    def __init__(self, data, status=0, message='', success = True):
+        self.result = data
         self.code = status
         self.success = success
         self.message = message
+        self.timestamp = time.time()
 
     def to_json(self):
         return jsonify(self.__dict__)
@@ -28,5 +29,5 @@ def error():
     #                                       exc_traceback)))
 
 
-def success(data):
-    return ApiResult(data)
+def success(data=None, message=''):
+    return ApiResult(data, status=0, message = message).to_json()
