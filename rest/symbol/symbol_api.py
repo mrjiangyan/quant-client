@@ -10,23 +10,14 @@ from auth.auth import login_required
 from data import database
 from .symbol_query_form import SymbolQueryForm
 from .symbol_form import SymbolModifyForm
-# from data.model.business_engine import BusinessEngine
 from data.model.t_symbol import Symbol
 from data.service.symbol_service import get_by_symbol
-# from data.model.device_monitoring_area import DeviceMonitoringArea
-# from data.model.engine_device_area import EngineDeviceArea
-# from data.model.sop_flow_process import SOPFlowProcess
-# from data.request.business_engine.basic_model_area_update_form import BasicModelAreaUpdateForm
-
-# from monitor.camera_monitor import do_write_protocol_json
 from rest.ApiResult import ApiResult, error_message, success
 
 blueprint = Blueprint(
     'symbol_api',
     __name__
 )
-
-
 
 
 # 获取列表
@@ -72,7 +63,7 @@ def list():
         "pages": math.ceil(record_count/page_size),
         "records": [item.to_dict() for item in record_list]
     }
-    return ApiResult(page_result).to_json()
+    return success(page_result)
 
 # 查询单个信息
 @login_required

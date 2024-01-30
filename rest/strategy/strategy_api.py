@@ -61,5 +61,4 @@ def list():
         "records": strategy_objects
     }
     return success(page_result)
-    # return ApiResult(strategy_objects).to_json()
 

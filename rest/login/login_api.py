@@ -21,7 +21,7 @@ from auth.auth import login_required
 # from data.request.business_engine.sop_flow_device_update_form import SOPFlowDeviceUpdateForm
 
 # from monitor.camera_monitor import do_write_protocol_json
-from rest.ApiResult import ApiResult, error_message
+from rest.ApiResult import success, error_message
 # from rest.device.device_api import is_exist_device
 # from rest.device.monitoring_area_api import is_exist_monitoring_areas
 
@@ -37,7 +37,7 @@ blueprint = flask.Blueprint(
 # @login_required
 @blueprint.route('/api/login', methods=['POST'])
 def login(): 
-    return ApiResult({
+    return success({
         "roles": [
             {
                 "roleName": "Super Admin",
@@ -48,5 +48,5 @@ def login():
         "username": "vben",
         "token": "fakeToken1",
         "realName": "Vben Admin",
-        "desc": "manager"}).to_json()
+        "desc": "manager"})
 

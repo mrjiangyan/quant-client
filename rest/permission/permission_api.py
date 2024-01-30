@@ -21,7 +21,7 @@ from auth.auth import login_required
 # from data.request.business_engine.sop_flow_device_update_form import SOPFlowDeviceUpdateForm
 
 # from monitor.camera_monitor import do_write_protocol_json
-from rest.ApiResult import ApiResult, error_message
+from rest.ApiResult import ApiResult, error_message, success
 # from rest.device.device_api import is_exist_device
 # from rest.device.monitoring_area_api import is_exist_monitoring_areas
 
@@ -37,7 +37,7 @@ blueprint = flask.Blueprint(
 @login_required
 @blueprint.route('/api/permission/getPermCode', methods=['GET'])
 def getPermCode(): 
-    return ApiResult({
+    return success({
         "allAuth": [
             {
                 "action": "btn:add",
@@ -63,12 +63,12 @@ def getPermCode():
             "system:user:add"
         ],
         "sysSafeMode": False
-    }).to_json()
+    })
     
 @login_required
 @blueprint.route('/api/permission/getUserPermissionByToken', methods=['GET'])
 def getUserPermissionByToken(): 
-    return ApiResult({
+    return success({
         "allAuth": [
             {
                 "action": "system:user:add",
@@ -172,22 +172,40 @@ def getUserPermissionByToken():
             },
             {
                 "redirect": False,
-                "path": "/setting/property",
-                "component": "setting/frequency/index",
+                "path": "/quant/strategyRecord",
+                "component": "quant/strategyRecord/index",
                 "route": "1",
                 "meta": {
                     "keepAlive": False,
                     "internalOrExternal": False,
                     "icon": "ant-design:tag-twotone",
                     "componentName": "index",
-                    "title": "资产管理"
+                    "title": "执行记录"
                 },
                 "homepageFlag": 0,
-                "name": "setting-property",
+                "name": "strategyRecord-list",
+                "id": "1649951160031326209",
+                "isNavigation": False
+            },
+            {
+                "redirect": False,
+                "path": "/quant/strategyRecord/detail",
+                "component": "quant/strategyRecord/detail",
+                "route": "1",
+                "hidden": True,
+                "meta": {
+                    "keepAlive": False,
+                    "internalOrExternal": False,
+                    "icon": "ant-design:tag-twotone",
+                    "componentName": "index",
+                    "title": "执行记录明细",
+                },
+                "homepageFlag": 0,
+                "name": "strategyRecord-detail",
                 "id": "1649951160031326209",
                 "isNavigation": False
             }
         ],
         "sysSafeMode": False
-    }).to_json()
+    })
 

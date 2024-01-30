@@ -5,29 +5,33 @@ from flask import jsonify
 
 import traceback
 import time
+import json
 
-class ApiResult:
-    def __init__(self, data, status=0, message='', success = True):
+class ApiResult():
+    def __init__(self, data:any=None, status:int=0, message:str='', success:bool = True):
         self.result = data
         self.code = status
         self.success = success
         self.message = message
         self.timestamp = time.time()
-
-    def to_json(self):
-        return jsonify(self.__dict__)
-
-
+   
 def error_message(message):
-    return ApiResult(None, -1, message).to_json()
+    result= ApiResult('', status = -1, message = message)
+    # return jsonify(result)
+    return json.dumps(result.__dict__)
 
 
 def error():
-    return ApiResult(None, -1, traceback.format_exc())
+    return ApiResult(status = -1, message = traceback.format_exc())
     # exc_type, exc_value, exc_traceback = sys.exc_info()
     # return ApiResult(None, -1, repr(traceback.format_exception(exc_type, exc_value,
     #                                       exc_traceback)))
 
 
 def success(data=None, message=''):
-    return ApiResult(data, status=0, message = message).to_json()
+    if hasattr(data, '__dict__'):
+        result = ApiResult(data.__dict__, message= message)
+    else:
+        result = ApiResult(data,  message = message)
+    return json.dumps(result.__dict__)
+

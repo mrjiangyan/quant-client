@@ -8,7 +8,7 @@ import flask
 
 from auth.auth import login_required
 
-from rest.ApiResult import ApiResult, error_message
+from rest.ApiResult import ApiResult, error_message, success
 
 blueprint = flask.Blueprint(
     'user_api',
@@ -22,7 +22,7 @@ blueprint = flask.Blueprint(
 @login_required
 @blueprint.route('/api/user', methods=['GET'])
 def login(): 
-    return ApiResult({
+    return success({
         "userId": "1",
         "username": "vben",
         "realName": "Vben Admin",
@@ -37,5 +37,5 @@ def login():
                 "value": "super"
             }
         ]
-    }).to_json()
+    })
 

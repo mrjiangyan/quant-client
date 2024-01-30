@@ -23,7 +23,7 @@ import traceback
 import argparse
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 200
+max_concurrent_downloads = 50
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
