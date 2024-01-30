@@ -136,7 +136,7 @@ def quert_detail_log():
                 # 创建一个字典存储买入日期和买入价格
                 point_data = {
                     'name': 'simpleAnnotation',
-                    'extendData': f'买入价:{buy_price},数量:{buy_quantity}',
+                    'extendData': f'买入:{buy_price},数量:{buy_quantity}',
                     'points': [{ 'timestamp': datetime.strptime(buy_date, "%Y-%m-%d").timestamp() * 1000, 'value': float(buy_price) }],
                 }
                 points.append(point_data)
@@ -152,7 +152,7 @@ def quert_detail_log():
                 # 创建一个字典存储买入日期和买入价格
                 point_data = {
                     'name': 'simpleAnnotation',
-                    'extendData': f'卖出价:{sell_price},数量:{sell_quantity}',
+                    'extendData': f'卖出:{sell_price}\r\n数量:{sell_quantity}',
                     'points': [{ 'timestamp': datetime.strptime(sell_date, "%Y-%m-%d").timestamp() * 1000, 'value': float(buy_price) }],
                 }
                 points.append(point_data)
@@ -202,7 +202,7 @@ def recursive_directory_file(path, params: StrategyRecordQueryForm):
     for content in contents:
         file = os.path.join(path, content)
         # 判断是否为文件
-        if os.path.isfile(file) and file.endswith('.log') and file != '_summary.log':
+        if os.path.isfile(file) and file.endswith('.log') and not '_summary' in file:
             file_name_without_extension = os.path.splitext(os.path.basename(file))[0]
             # file_name = os.path.basename(file)  # 获取文件路径的基本文件名
             revenue = 0

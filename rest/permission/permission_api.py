@@ -146,7 +146,7 @@ def getUserPermissionByToken():
                     "internalOrExternal": False,
                     "icon": "ant-design:tag-twotone",
                     "componentName": "index",
-                    "title": "策略管理"
+                    "title": "交易策略管理"
                 },
                 "homepageFlag": 0,
                 "name": "quant-strategy",
@@ -180,7 +180,7 @@ def getUserPermissionByToken():
                     "internalOrExternal": False,
                     "icon": "ant-design:tag-twotone",
                     "componentName": "index",
-                    "title": "执行记录"
+                    "title": "回测记录"
                 },
                 "homepageFlag": 0,
                 "name": "strategyRecord-list",
@@ -198,7 +198,7 @@ def getUserPermissionByToken():
                     "internalOrExternal": False,
                     "icon": "ant-design:tag-twotone",
                     "componentName": "index",
-                    "title": "执行记录明细",
+                    "title": "回测记录明细",
                 },
                 "homepageFlag": 0,
                 "name": "strategyRecord-detail",
