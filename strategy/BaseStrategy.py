@@ -38,6 +38,7 @@ class BaseStrategy(bt.Strategy):
         self.order = None  # 用于存储订单对象的属性
           # Add your MACD indicator here
         self.trade = None
+        self.buyprice = 0      
         self.macd = bt.indicators.MACD()
         self.rsi = bt.indicators.RSI(self.datas[0])
         self.buy_date_data = None
@@ -138,7 +139,7 @@ class BaseStrategy(bt.Strategy):
                 self.last_sell_day = None
                 self.log(f"买入日期: {execution_date}, 开盘价: {self.buy_date_data['open']:.2f}, 最高价: {self.buy_date_data['high']:.2f}, 最低价: {self.buy_date_data['low']:.2f}, 收盘价: {self.buy_date_data['close']:.2f}, 交易量: {self.buy_date_data['volume']:.2f}")
                 self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f},手续费{order.executed.comm:.2f}")
-                
+                self.buyprice = order.executed.price
             elif order.issell():
                 self.log(f"卖出日期: {execution_date}, 开盘价: {self.sell_date_data['open']:.2f}, 最高价: {self.sell_date_data['high']:.2f}, 最低价: {self.sell_date_data['low']:.2f}, 收盘价: {self.sell_date_data['close']:.2f}, 交易量: {self.sell_date_data['volume']:.2f}")
                 self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},手续费{order.executed.comm:.2f}")
@@ -149,7 +150,7 @@ class BaseStrategy(bt.Strategy):
        
         
     def print_macd(self):
-        self.log(f'MACD DIF:{self.macd.macd[0]}, DEA:{self.macd.signal[0]}, MACD:{self.macd.macd - self.macd.signal}')
+        self.log(f'MACD DIF:{self.macd.macd[0]:.3f}, DEA:{self.macd.signal[0]:.3f}, MACD:{self.macd.macd - self.macd.signal:.3f}')
     
     def print_kdj(self):
         self.log(f'K:{self.K[0]:.3f},D:{self.D[0]:.3f},J:{self.J[0]:.3f}')
@@ -198,8 +199,8 @@ class BaseStrategy(bt.Strategy):
 
 
     def notify_trade(self, trade):
-        if not trade.isclosed:
-            return
+        # if not trade.isclosed:
+        #     return
         self.trade = trade
         # print(trade)
         self.log(f'交易盈亏: 毛盈亏 {trade.pnl:.2f}, 净盈亏 {trade.pnlcomm:.2f}')

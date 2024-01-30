@@ -14,6 +14,8 @@ from loguru import logger
 
 # 离场条件：当价格跌破10日价格低点时清仓
 
+
+#TODO: 待增加的逻辑 1.横盘每日振幅在5%以内的并且大于等于5日左右的剔除掉 2.需要增加逻辑，将非美国的股票尤其是非洲和中国的剔除掉  
 class TurtleStrategy(BaseStrategy):
     params = (
         ("name", '海龟交易策略'), 
@@ -24,9 +26,7 @@ class TurtleStrategy(BaseStrategy):
     def __init__(self, *argv):
         # used to modify parameters
         super().__init__(argv[0])
-        self.buyprice = 0      
         self.buycomm = 0      
-        self.buy_size = 0      
         self.buy_count = 0       
         # 海龟交易法则中的唐奇安通道和平均波幅ATR        
         self.H_line = bt.indicators.Highest(self.data.high(-1), period=self.p.long_period)        
@@ -43,41 +43,50 @@ class TurtleStrategy(BaseStrategy):
     def next(self): 
         if not self.check_allow_sell_or_buy():
                 return
-        if self.order:
-            return        
+        # if self.position:
+        #     print('二次买入信号', self.datas[0].datetime.datetime(0), self.buyprice, self.data.close[0], self.ATR[0], self.buyprice + 0.5 * self.ATR[0])    
         #入场：价格突破上轨线且空仓时        
-        if self.buy_signal > 0 and self.buy_count == 0:                                 
-            self.buy_size = self.broker.getvalue() * 0.01 / self.ATR            
-            self.buy_size  = int(self.buy_size  / 100) * 100                             
-            self.sizer.p.stake = self.buy_size             
-            buy_signal =  self.data.close[0] < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
+        if self.buy_signal > 0 and not self.position:                                 
+            buy_size = self.broker.getvalue() * 0.01 / self.ATR            
+            buy_size  = int(buy_size  / 100) * 100                             
+            self.sizer.p.stake = buy_size      
+            
+            # print(1, self.data.close < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000) 
+            # print(2, round(self.SMA_5[0],2) > round(self.SMA_10[0],2) > round(self.SMA_15[0],2))     
+            # print(3, 0.01 < (self.SMA_5[0]-self.SMA_30[0])/self.SMA_30[0] < 0.2)   
+            # print(4, self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] )
+            # print(5, self.turnover_rate(self.data.volume[0]) < 25 )
+            # print(6, self.datas[0].datetime.datetime(0) )
+            buy_signal =  self.data.close < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
                     and round(self.SMA_5[0],2) > round(self.SMA_10[0],2) > round(self.SMA_15[0],2) \
                     and 0.01 < (self.SMA_5[0]-self.SMA_30[0])/self.SMA_30[0] < 0.2 \
-                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
-                    and self.turnover_rate(self.data.volume[0]) < 25
-                
+                    and self.turnover_rate(self.data.volume[0]) < 25 \
+                    and not (self.SMA_5[0] > self.SMA_10[0] > self.SMA_15[0] >  self.SMA_30[0] > self.SMA_60[0]) \
+                    # and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
+                    
             if buy_signal and self.internal_buy():     
-                print(self.data.volume[0], self.turnover_rate(self.data.volume[0]))   
                 self.buy_count += 1    
                 self.print_kdj()
                 self.print_bolling()
                 self.print_macd()
                 self.print_sma()
                 self.print_rsi()
-                self.print_turnover_rate(self.data.volume[0])          
+                self.print_turnover_rate(self.data.volume[0])    
+                print(self.position)      
         #加仓：价格上涨了买入价的0.5的ATR且加仓次数少于3次（含）        
-        elif self.data.close > self.buyprice+0.5*self.ATR[0] and self.buy_count > 0 and self.buy_count <=4:   
+        elif self.position and self.data.close > self.buyprice + 0.5 * self.ATR[0] and self.buy_count <= 4:   
                     
-            self.buy_size  = self.broker.getvalue() * 0.01 / self.ATR            
-            self.buy_size  = int(self.buy_size  / 100) * 100            
-            self.sizer.p.stake = self.buy_size      
+            buy_size  = self.broker.getvalue() * 0.01 / self.ATR            
+            buy_size  = int(buy_size  / 100) * 100            
+            self.sizer.p.stake = buy_size      
             buy_signal =  self.data.close[0] < self.bollinger.lines.top[0] and self.data.volume[0] > 8 * 10000 \
                     and round(self.SMA_5[0],2) > round(self.SMA_10[0],2) > round(self.SMA_15[0],2) \
                     and 0.01 < (self.SMA_5[0]-self.SMA_30[0])/self.SMA_30[0] < 0.2 \
-                    and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
+                    and not (self.SMA_5[0] > self.SMA_10[0] > self.SMA_15[0] >  self.SMA_30[0] > self.SMA_60[0]) \
                     and self.turnover_rate(self.data.volume[0]) < 25
+                    # and self.data.low[0] < self.SMA_30[0] < self.SMA_60[0] \
+                  
             if buy_signal and self.internal_buy():    
-                logger.info(f'{self.data.volume[0]}, {self.turnover_rate(self.data.volume[0])}')  
                 self.buy_count += 1    
                 self.print_kdj()
                 self.print_bolling()
@@ -86,7 +95,7 @@ class TurtleStrategy(BaseStrategy):
                 self.print_rsi()
                 self.print_turnover_rate(self.data.volume[0])    
         #离场：价格跌破下轨线且持仓时        
-        elif self.sell_signal < 0 and self.buy_count > 0:            
+        elif self.sell_signal < 0 and self.position:            
             if self.internal_sell():        
                 self.print_kdj()
                 self.print_bolling()
@@ -96,7 +105,7 @@ class TurtleStrategy(BaseStrategy):
                 self.print_turnover_rate(self.data.volume[0])             
                 self.buy_count = 0        
         #止损：价格跌破买入价的2个ATR且持仓时        
-        elif self.data.close < (self.buyprice - 2*self.ATR[0]) and self.buy_count > 0:           
+        elif self.data.close < (self.buyprice - 2 * self.ATR[0]) and self.position:           
             if self.internal_sell():        
                 self.print_kdj()
                 self.print_bolling()
