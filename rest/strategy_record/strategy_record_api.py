@@ -37,9 +37,6 @@ for index, strategy in enumerate(all_strategies):
     strategy_name = getattr(strategy.params, 'name')
     strategy_objects.append({ 'strategy_name':strategy_name, 'strategy': strategy.__name__ })
 
-print(strategy_objects)
-
-
 blueprint = Blueprint(
     'strategy_record_api',
     __name__

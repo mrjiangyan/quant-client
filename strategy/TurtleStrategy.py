@@ -39,6 +39,9 @@ class TurtleStrategy(BaseStrategy):
         self.buy_signal = bt.ind.CrossOver(self.data.close(0), self.H_line)        
         self.sell_signal = bt.ind.CrossOver(self.data.close(0), self.L_line)    
 
+        self.lowest_low = bt.indicators.Lowest(self.data.low, period=10)
+        self.highest_high = bt.indicators.Highest(self.data.high, period=10)
+
     # 判断卖出逻辑, 如果满足下述条件中的任意1个就卖出
     # 1.如果10天内上涨超过50%则卖出
     # 2.如果开盘价和收盘价都超出布林线，则收盘就卖出
@@ -56,6 +59,23 @@ class TurtleStrategy(BaseStrategy):
             self.log('满足连续两天收盘价超出布林线上轨的卖出策略')
             return True
         return False
+    
+    # 判断买入逻辑，排除掉一些极端情况
+    # 1.排除掉最近10天上涨超过 50% 的情况
+    # 2.排除掉最近10天波动没有超过5%的情况
+    def filter_buy(self):
+        # 1.排除掉最近10天上涨超过 50% 的情况
+        recent_lowest = self.lowest_low.lines[0]
+        # print((self.data.open[0] -recent_lowest) / recent_lowest)
+        # if (self.data.open[0] -recent_lowest) / recent_lowest > 0.5:
+        #     self.log('不满足10天内涨幅不超过50%的条件')
+        #     return True
+        # # 2.排除掉最近10天波动没有超过5%的情况
+        # print((self.highest_high.lines[0] - recent_lowest)/recent_lowest)
+        # if  (self.highest_high.lines[0] - recent_lowest)/recent_lowest < 0.05  :
+        #     self.log('不满足最近10天波动超过5%的情况')
+        #     return True
+        return False
    
     def next(self): 
         if not self.check_allow_sell_or_buy():
@@ -63,7 +83,7 @@ class TurtleStrategy(BaseStrategy):
         # if self.position:
         #     print('二次买入信号', self.datas[0].datetime.datetime(0), self.buyprice, self.data.close[0], self.ATR[0], self.buyprice + 0.5 * self.ATR[0])    
         #入场：价格突破上轨线且空仓时        
-        if self.buy_signal > 0 and not self.position:                                 
+        if self.buy_signal > 0 and not self.position and not self.filter_buy():                                 
             buy_size = self.broker.getvalue() * 0.01 / self.ATR            
             buy_size  = int(buy_size  / 100) * 100                             
             self.sizer.p.stake = buy_size      

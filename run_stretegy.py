@@ -37,6 +37,8 @@ def allow_cerebro(symbol:Symbol, period:str ):
     if not (1 < symbol.last_price < 200):
         return False
     
+    if symbol.compute == False:
+        return False
     # 成交量小于50万股的就不考虑
     # if period == '1d' and symbol.volume < 10 * 10000:
     #     return False

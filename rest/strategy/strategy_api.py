@@ -25,7 +25,6 @@ for index, strategy in enumerate(all_strategies):
 
 print(strategy_objects)
 
-import logging
 from auth.auth import login_required
 # from data import database
 # from data.model.business_engine import BusinessEngine
