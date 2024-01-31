@@ -114,7 +114,7 @@ def sync():
 
     symbols = []
     # Get all symbols
-    with database.create_session() as db_sess:
+    with database.create_database_session() as db_sess:
         symbols = getAll(db_sess) 
     
     start_time = time()

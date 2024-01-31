@@ -85,16 +85,20 @@ browser.set_selenium_implicit_wait(30)
 xpath = f"xpath://button[@class='nasdaq-screener__form-button--download.ns-download-1']"
 xpath = f"xpath://button[contains(@class,'nasdaq-screener__form-button--download.ns-download-1')]"
                         
-browser.open_browser('https://www.nasdaq.com/market-activity/stocks/screener',  browser='chrome', options = chrome_options)
+browser.open_browser('https://www.nasdaq.com/market-activity/stocks/screener',  browser='chrome', options= chrome_options)
 time.sleep(2)
+print('浏览器打开成功')
 buttons = browser.find_elements("//button")
+print(buttons)
 # 遍历找到的按钮元素
 for button in buttons:
     # 执行你想要的操作，比如点击按钮
     class_name = button.get_attribute("class")
     if 'download' in class_name:
+        print('搜索到按钮')
         driver = browser.driver
         actions = ActionChains(driver)  
+        actions.move_to_element(button).perform()
         actions.click(button).perform()
         time.sleep(10)
         break
@@ -109,7 +113,6 @@ current_directory = os.getcwd()
 
 new_file_path = os.path.join(current_directory ,  'resources','screener',  "nasdaq_latest.csv")
 shutil.move(filename, new_file_path)
-
 
  # 必须要通过app上下文去启动数据库
 database.global_init("edge.db")
@@ -129,7 +132,7 @@ logger.info(tables)
 dataframes = []
 # Append the DataFrame to the list
 dataframes.append(tables)
-with database.create_session() as db_sess:    
+with database.create_database_session() as db_sess:    
     for df in dataframes:
         # Loop through each row of the DataFrame
         for index, row in df.iterrows():

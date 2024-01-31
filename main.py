@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 from flask import make_response, jsonify
-from gevent import pywsgi
 import traceback
 from auth import auth
 import monitor
@@ -13,11 +12,12 @@ import os
 import faulthandler
 from data import database
 from rest import register_api
+from config import Config
 faulthandler.enable()
 
 def create_app():
     app = Flask(__name__)
-   
+    app.config.from_object(Config)
      # 必须要通过app上下文去启动数据库
     database.global_init("edge.db")
     # 添加api接口到
@@ -63,5 +63,4 @@ def error_handler(e):
 
 
 if __name__ == '__main__':
-    server = pywsgi.WSGIServer(('0.0.0.0', 9000), app)
-    server.serve_forever()
+    app.run(debug=True)

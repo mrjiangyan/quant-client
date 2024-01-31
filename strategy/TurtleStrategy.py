@@ -39,6 +39,23 @@ class TurtleStrategy(BaseStrategy):
         self.buy_signal = bt.ind.CrossOver(self.data.close(0), self.H_line)        
         self.sell_signal = bt.ind.CrossOver(self.data.close(0), self.L_line)    
 
+    # 判断卖出逻辑, 如果满足下述条件中的任意1个就卖出
+    # 1.如果10天内上涨超过50%则卖出
+    # 2.如果开盘价和收盘价都超出布林线，则收盘就卖出
+    # 3.连续两天收盘价超出布林线，则第二天卖出。
+    def is_sell(self):
+        distince_days = (self.data.datetime.date(0) - self.buy_date_data['date']).days
+        # 1.如果10天内上涨超过50%则卖出
+        if distince_days <= 10 and (self.data.high[0]-self.buyprice)/self.buyprice > 0.5:
+            self.log('满足10天内涨幅超过50%的收益率卖出')
+            return True
+        if  distince_days > 4 and self.data.close[0] > self.data.open[0] > self.bollinger.lines.top[0]:
+            self.log('满足开盘价和收盘价都超出布林线的上轨的卖出策略')
+            return True
+        if distince_days > 8 and self.data.close[-1] > self.bollinger.lines.top[-1] and  self.data.close[0]> self.bollinger.lines.top[0]:
+            self.log('满足连续两天收盘价超出布林线上轨的卖出策略')
+            return True
+        return False
    
     def next(self): 
         if not self.check_allow_sell_or_buy():
@@ -95,7 +112,10 @@ class TurtleStrategy(BaseStrategy):
                 self.print_rsi()
                 self.print_turnover_rate(self.data.volume[0])    
         #离场：价格跌破下轨线且持仓时        
-        elif self.sell_signal < 0 and self.position:            
+        
+        
+         #止损：价格跌破买入价的2个ATR且持仓时   
+        if self.position and self.is_sell(): #(self.sell_signal < 0 or self.data.close < (self.buyprice - 2 * self.ATR[0])):            
             if self.internal_sell():        
                 self.print_kdj()
                 self.print_bolling()
@@ -104,16 +124,8 @@ class TurtleStrategy(BaseStrategy):
                 self.print_rsi()
                 self.print_turnover_rate(self.data.volume[0])             
                 self.buy_count = 0        
-        #止损：价格跌破买入价的2个ATR且持仓时        
-        elif self.data.close < (self.buyprice - 2 * self.ATR[0]) and self.position:           
-            if self.internal_sell():        
-                self.print_kdj()
-                self.print_bolling()
-                self.print_macd()
-                self.print_sma()
-                self.print_rsi()
-                self.print_turnover_rate(self.data.volume[0])    
-                self.buy_count = 0       
+            
+       
 
     #记录交易收益情况（可省略，默认不输出结果）
   

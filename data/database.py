@@ -6,6 +6,7 @@ import sqlalchemy.orm as orm
 from sqlalchemy.orm import Session
 import sqlalchemy.ext.declarative as dec
 from loguru import logger
+from contextlib import contextmanager
 
 def global_init(db_file):
     global __factory
@@ -33,6 +34,15 @@ def create_session() -> Session:
     return __factory()
 
 
+@contextmanager
+def create_database_session():
+    # 在这里打开数据库连接
+    db_sess = create_session()
+    try:
+        yield db_sess
+    finally:
+        # 在这里关闭数据库连接
+        db_sess.close()
 
 def create_readonly_ssession() -> Session:
 

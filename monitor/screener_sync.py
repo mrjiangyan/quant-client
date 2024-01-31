@@ -93,7 +93,7 @@ def sync():
     dataframes = []
     # Append the DataFrame to the list
     dataframes.append(tables)
-    with database.create_session() as db_sess:    
+    with database.create_database_session() as db_sess:    
         for df in dataframes:
             # Loop through each row of the DataFrame
             for index, row in df.iterrows():

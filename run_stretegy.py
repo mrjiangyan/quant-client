@@ -21,13 +21,9 @@ from strategy.BaseStrategy import BaseStrategy
 current_working_directory = os.getcwd()
 
 cash = 10000.0
-days = 5
+
 # 示例：假设策略类定义在名为 "strategies" 的模块中
 module_name = "strategy"
-
-strategy_cls = None
-
-output_path = ''
 
 def get_all_classes(module_name):
     module = importlib.import_module(module_name)
@@ -49,12 +45,11 @@ def allow_cerebro(symbol:Symbol, period:str ):
     #     return False
     return True
 
-def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
+def process_strategy(symbol: Symbol, period:str, start_datetime:datetime, strategy_cls, output_path:str ):
     try:
         if allow_cerebro(symbol, period) == False:
             return symbol, None
-        # Create cerebro instance for each symbol
-        
+
         datapath = os.path.join(current_working_directory, 'resources', f'historical_data/{period}/{symbol.symbol}.csv')
         if not os.path.exists(datapath):
             return symbol.symbol, None
@@ -64,11 +59,6 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
         if existing_data is None or existing_data.empty:
             return symbol , None
         
-        # existing_data['Open'] = existing_data['Open'].replace(0, 0.01)
-        # existing_data['Close'] = existing_data['Close'].replace(0, 0.01)
-        # existing_data['High'] = existing_data['High'].replace(0, 0.01)
-        # existing_data['Low'] = existing_data['Low'].replace(0, 0.01)
-        # existing_data['Volume'] = existing_data['Volume'].replace(0, 1)
         existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
                 .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
                 .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
@@ -88,7 +78,7 @@ def run_strategy(symbol: Symbol, period:str, user_input_params: dict):
         
         shared_var = [False] 
         # 将策略实例添加到Cerebro中
-        cerebro.addstrategy(strategy_cls, {}, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
+        cerebro.addstrategy(strategy_cls, {}, shared_variable=shared_var, start_date= start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
 
         # Add the first strategy to the engine with the shared variable
         # cerebro.addstrategy(BuyExecutor, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
@@ -133,21 +123,11 @@ def get_user_input_for_params(strategy_cls:BaseStrategy):
     print(strategy_instance.params)
 
     user_input_params = {}
-    # for param_tuple in params_tuples:
-    #     param_name, param_default = param_tuple
-    #     user_input = input(f"请输入 {param_name} 的值（默认为 {param_default}）: ") or param_default
-    #     user_input_params[param_name] = type(param_default)(user_input)  # 将用户输入的值转换为参数的类型
-
-    # user_input_params = {}
-    # for param_name, param_default in params:
-    #     user_input = input(f"请输入 {param_name} 的值（默认为 {param_default}）: ") or param_default
-    #     user_input_params[param_name] = type(param_default)(user_input)  # 将用户输入的值转换为参数的类型
-
    
     return user_input_params
 
     
-def analyze_returns(symbol_returns):
+def analyze_returns(symbol_returns, start_datetime:datetime,output_path:str):
     # Dictionary to store individual returns for each symbol
     symbol_individual_returns = {}
     log_file_path = os.path.join(output_path, f'_summary.log')
@@ -172,7 +152,6 @@ def analyze_returns(symbol_returns):
    
     symbols = ''
     with open(log_file_path, 'a') as f:
-        
         print("\n每个Symbol的收益金额:")
         for symbol, individual_return in sorted_returns:
             symbols += f"{symbol} "
@@ -203,45 +182,29 @@ def select_strategy():
         else:
             print("无效的输入，请输入数字或exit")
 
-
-if __name__ == '__main__':
-
-
-    input_symbol = None
-    input_symbol = input(f"请输入需要回测的证券代码以空格分割（默认为全部）: ") or input_symbol
-
-    # default_macd_level = '2'
-    # macd_level = input(f"请输入买入点要求的macd等级（默认为 {default_macd_level}）: ") or default_macd_level
-
-    period = '1d'
-    period = input(f"请输入K线数据类型（默认为 {period}）: ") or period
-
-    default_days = 5
-    default_days = input(f"请输入回测的天数（默认为 {days}）: ") or default_days
-
-    days = int(default_days)
-
-    strategy_cls = select_strategy()
- 
-    print(strategy_cls)
-
+def run_strategy(input_symbol, period, days, strategy_cls):
+    if isinstance(strategy_cls, str):
+        for i, strategy in enumerate(all_strategies):
+            print(strategy.__name__, strategy_cls)
+            if strategy.__name__ == strategy_cls:
+                strategy_cls = strategy
+                break
     output_path = os.path.join(current_working_directory, 'output', strategy_cls.params.name,  f'{period}-{datetime.now().strftime("%Y-%m-%d-%H-%M")}' )
 
     if not os.path.exists(output_path):
         # 不存在则创建
         os.makedirs(output_path)
-    database.global_init("edge.db")
+    # database.global_init("edge.db")
  
     symbols = []
     # Get all symbols
-    with database.create_session() as db_sess:
+    with database.create_database_session() as db_sess:
         if input_symbol:
             symbols = [get_by_symbol(db_sess, s, "US") for s in input_symbol.split(' ')]
         else:
-            symbols = getAll(db_sess)
+            symbols = getAll(db_sess)   
       
-    current_datetime = datetime.now()
-    
+
     start_datetime = datetime.now() - timedelta(days=days)
 
     symbol_returns = {}
@@ -250,7 +213,7 @@ if __name__ == '__main__':
 
 
     with concurrent.futures.ThreadPoolExecutor(max_workers= 50) as executor:
-        futures = [executor.submit(run_strategy, symbol, period, None ) for symbol in symbols]
+        futures = [executor.submit(process_strategy, symbol, period, start_datetime, strategy_cls, output_path ) for symbol in symbols]
 
         for future in concurrent.futures.as_completed(futures):
             symbol, result_or_exception = future.result()
@@ -261,4 +224,24 @@ if __name__ == '__main__':
                 symbol_returns[symbol] = result_or_exception  # Replace with the actual return value from your strategy
 
     # Analyze and display returns
-    analyze_returns(symbol_returns)
+    analyze_returns(symbol_returns, start_datetime, output_path)
+    
+if __name__ == '__main__':
+
+    input_symbol = None
+    input_symbol = input(f"请输入需要回测的证券代码以空格分割（默认为全部）: ") or input_symbol
+    period = '1d'
+    period = input(f"请输入K线数据类型（默认为 {period}）: ") or period
+
+    default_days = 5
+    default_days = input(f"请输入回测的天数（默认为 {default_days}）: ") or default_days
+
+    days = int(default_days)
+
+    strategy_cls = select_strategy()
+ 
+    print(strategy_cls)
+    
+    run_strategy(input_symbol, period, days, strategy_cls)
+
+   

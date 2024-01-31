@@ -23,14 +23,13 @@ import traceback
 import argparse
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 50
+max_concurrent_downloads = 25
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '1d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
 interval_map = { "1d": 'max' , '1m': '1d', "1h": 'ytd','1wk': 'max'}
 interval_map = { "1d": 'max','1wk': 'max', '1m': '1d' }
-
 
 # Function to download historical data for a symbol
 def download_data(symbol:Symbol, root_path):
@@ -149,7 +148,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     symbols = []
     # Get all symbols
-    with database.create_session() as db_sess:
+    with database.create_database_session() as db_sess:
         if args.symbol:
             symbols = [get_by_symbol(db_sess, s, "US") for s in args.symbol]
         else:
