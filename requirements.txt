@@ -5,7 +5,7 @@ flask-cors
 flask-wtf
 sqlalchemy
 sqlalchemy_serializer
-
+sqlitepool
 yahooquery
 backtrader
 # gevent
@@ -21,5 +21,6 @@ robotframework-seleniumlibrary
 certifi
 rpaframework
 gunicorn=21.2.0
+
 # wtforms
 # jwt

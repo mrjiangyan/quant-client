@@ -124,7 +124,6 @@ def quert_detail_log():
             if "买入日期" in line:
                 # 解析买入日期和买入价格相关数据
                 buy_date = line.split("买入日期: ")[1].split(",")[0]
-                print('buy_date', buy_date)
             elif "买入完成" in line:
                 # 解析买入日期和买入价格相关数据
                # 使用正则表达式提取买入价格和买入数量

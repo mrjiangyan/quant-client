@@ -9,4 +9,6 @@ class SymbolQueryForm(PageQueryForm):
     market = wtforms.StringField()
     
     country = wtforms.StringField()
+    
+    compute = wtforms.BooleanField()
    

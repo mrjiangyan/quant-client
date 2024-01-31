@@ -23,7 +23,12 @@ def global_init(db_file):
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
     logger.info(f"Connection String {conn_str}")
 
-    engine = sa.create_engine(conn_str, echo=True)
+    engine = sa.create_engine(conn_str, 
+                              echo=True, 
+                              pool_size=5, # 数据库连接池初始化的容量
+                      max_overflow=10, # 连接池最大溢出容量，该容量+初始容量=最大容量。超出会堵塞等待，等待时间为timeout参数值默认30
+                      pool_recycle=7200, # 重连周期
+                      )
     __factory = orm.sessionmaker(bind=engine)
 
     SqlAlchemyBase.metadata.create_all(engine)
