@@ -41,8 +41,6 @@ quant-client
   The ticket system is (was, actually) more often than not abused to ask for
   advice about samples.
 
-For **feedback/questions/...** use the `Community <https://community.backtrader.com>`_
-
 Here a snippet of a Simple Moving Average CrossOver. It can be done in several
 different ways. Use the docs (and examples) Luke!
 ::
@@ -73,8 +71,12 @@ parametrized from the command line.
 Features:
 =========
 
-Live Trading and backtesting platform written in Python.
+系统主要的功能如下.
 
+  - 开发策略进行交易回测
+  - 对证券的Symbol进行管理，目前只支持NASDAQ的数据下载
+  - 交易数据的下载，基于文件的存储
+  - 回测历史数据结果的分析和预览
   - Live Data Feed and Trading with
 
     - Interactive Brokers (needs ``IbPy`` and benefits greatly from an
