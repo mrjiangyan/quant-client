@@ -18,11 +18,6 @@ quant-client
        :scale: 100%
        :target: https://pypi.python.org/pypi/backtrader/
 
-.. image:: https://img.shields.io/pypi/l/backtrader.svg
-   :alt: License
-   :scale: 100%
-   :target: https://github.com/backtrader/backtrader/blob/master/LICENSE
-
 .. image:: https://pypi-camo.freetls.fastly.net/da6321181d9727b03c184c40a5f46773aca688df/68747470733a2f2f696d672e736869656c64732e696f2f707970692f707976657273696f6e732f706970
    :alt: Python versions
    :scale: 100%
@@ -30,8 +25,11 @@ quant-client
 
 **Yahoo API Note**:
 
-  [2018-11-16] After some testing it would seem that data downloads can be
-  again relied upon over the web interface (or API ``v7``)
+2.3.7
+- Ticker, Screener, and Research classes now accept the keyword argument progress. If set to True, a progress bar will be displayed when downloading data. The default value is False.
+- Add a search function. This allows you to query Yahoo Finance for anything. Search for a company via cusip, ISIN number, name, etc. The function returns a dictionary containing most relevant quotes and news items. You can also provide an argument first_quote that returns only the most relevant quote from the query.
+- Add a currency_converter function. This will retrieve the current conversion rate between two specified currencies as well as historical rates over a specified period.
+- Fix bug related to converting financials (income statement, balance sheet, cash flow) to dataframe.
 
 **Tickets**
 
