@@ -1,4 +1,4 @@
-backtrader
+quant-client
 ==========
 
 .. image:: https://img.shields.io/pypi/v/backtrader.svg
@@ -103,9 +103,9 @@ Live Trading and backtesting platform written in Python.
 Documentation
 =============
 
-The blog:
+The discussions:
 
-  - `Blog <http://www.backtrader.com/blog>`_
+  - `Discussions <[http://www.backtrader.com/blog](https://github.com/mrjiangyan/quant-client/discussions)>`_
 
 Read the full documentation at:
 
