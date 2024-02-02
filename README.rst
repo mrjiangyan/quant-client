@@ -8,10 +8,10 @@ quant-client
 
 欢迎各位的一起加入，让项目逐渐的发展壮大。
 
-.. image:: https://img.shields.io/pypi/v/backtrader.svg
+.. image:: https://pypi-camo.freetls.fastly.net/cd7ef4975d71b4a87a35b3c01b5b1ec8481c4549/68747470733a2f2f696d672e736869656c64732e696f2f707970692f762f7069702e737667
    :alt: PyPi Version
    :scale: 100%
-   :target: https://pypi.python.org/pypi/backtrader/
+   :target: https://pypi.org/project/pip/
 
 ..  .. image:: https://img.shields.io/pypi/dm/backtrader.svg
        :alt: PyPi Monthly Donwloads
@@ -22,14 +22,11 @@ quant-client
    :alt: License
    :scale: 100%
    :target: https://github.com/backtrader/backtrader/blob/master/LICENSE
-.. image:: https://travis-ci.org/backtrader/backtrader.png?branch=master
-   :alt: Travis-ci Build Status
-   :scale: 100%
-   :target: https://travis-ci.org/backtrader/backtrader
-.. image:: https://img.shields.io/pypi/pyversions/backtrader.svg
+
+.. image:: https://pypi-camo.freetls.fastly.net/da6321181d9727b03c184c40a5f46773aca688df/68747470733a2f2f696d672e736869656c64732e696f2f707970692f707976657273696f6e732f706970
    :alt: Python versions
    :scale: 100%
-   :target: https://pypi.python.org/pypi/backtrader/
+   :target: https://pypi.org/project/pip/
 
 **Yahoo API Note**:
 
