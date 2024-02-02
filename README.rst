@@ -1,6 +1,13 @@
 quant-client
 ==========
 
+ 
+一个开源的交易策略项目，包括回测，交易代码管理以及回测日志分析等功能
+
+此项目为后端项目还有一个单独的基于Vue3开发的前端项目。
+
+欢迎各位的一起加入，让项目逐渐的发展壮大。
+
 .. image:: https://img.shields.io/pypi/v/backtrader.svg
    :alt: PyPi Version
    :scale: 100%
@@ -105,7 +112,7 @@ Documentation
 
 The discussions:
 
-  - `Discussions <[http://www.backtrader.com/blog](https://github.com/mrjiangyan/quant-client/discussions)>`_
+  - `Discussions <(https://github.com/mrjiangyan/quant-client/discussions)>`_
 
 Read the full documentation at:
 
@@ -115,10 +122,10 @@ List of built-in Indicators (122)
 
   - `Indicators Reference <http://www.backtrader.com/docu/indautoref.html>`_
 
-Python 2/3 Support
+Python 3 Support
 ==================
 
-  - Python >= ``3.2``
+  - Python >= ``3.8``
 
   - It also works with ``pypy`` and ``pypy3`` (no plotting - ``matplotlib`` is
     not supported under *pypy*)
@@ -126,14 +133,9 @@ Python 2/3 Support
 Installation
 ============
 
-``backtrader`` is self-contained with no external dependencies (except if you
-want to plot)
-
 From *pypi*:
 
-  - ``pip install backtrader``
-
-  - ``pip install backtrader[plotting]``
+  - ``pip install -r requirement.txt``
 
     If ``matplotlib`` is not installed and you wish to do some plotting
 
@@ -152,27 +154,4 @@ An example for *IB* Data Feeds/Trading:
 For other functionalities like: ``Visual Chart``, ``Oanda``, ``TA-Lib``, check
 the dependencies in the documentation.
 
-From source:
 
-  - Place the *backtrader* directory found in the sources inside your project
-
-Version numbering
-=================
-
-X.Y.Z.I
-
-  - X: Major version number. Should stay stable unless something big is changed
-    like an overhaul to use ``numpy``
-  - Y: Minor version number. To be changed upon adding a complete new feature or
-    (god forbids) an incompatible API change.
-  - Z: Revision version number. To be changed for documentation updates, small
-    changes, small bug fixes
-  - I: Number of Indicators already built into the platform
-
-# quant-client
- 
-一个开源的交易策略项目，包括回测，交易代码管理以及回测日志分析等功能
-
-此项目为后端项目还有一个单独的基于Vue3开发的前端项目。
-
-欢迎各位的一起加入，让项目逐渐的发展壮大。
