@@ -65,18 +65,46 @@ class TurtleStrategy(BaseStrategy):
     # 2.排除掉最近10天波动没有超过5%的情况
     def filter_buy(self):
         # 1.排除掉最近10天上涨超过 50% 的情况
-        recent_lowest = self.lowest_low.lines[0]
+        # recent_lowest = self.lowest_low.lines[0]
         # print((self.data.open[0] -recent_lowest) / recent_lowest)
         # if (self.data.open[0] -recent_lowest) / recent_lowest > 0.5:
         #     self.log('不满足10天内涨幅不超过50%的条件')
+        #     return True
+        # latest_price = self.find_latest_price_with_days(10)
+        # if (self.data.high[0] - latest_price)/ latest_price > 0.5:
+        #     self.log('不满足10天内涨幅不超过35%的条件')
+        #     return True
+        # latest_price = self.find_latest_price_with_days(50)
+        # if (self.data.high[0] - latest_price)/ latest_price > 0.5:
+        #     self.log('不满足50天内涨幅不超过50%的条件')
         #     return True
         # # 2.排除掉最近10天波动没有超过5%的情况
         # print((self.highest_high.lines[0] - recent_lowest)/recent_lowest)
         # if  (self.highest_high.lines[0] - recent_lowest)/recent_lowest < 0.05  :
         #     self.log('不满足最近10天波动超过5%的情况')
         #     return True
+        
+        if self.find_up_days(10, 8):
+            self.log('过去10天内有超过8天上涨, 涨幅过大')
+            return True
         return False
-   
+    
+    # 寻找N天内的最低价
+    def find_latest_price_with_days(self, days:int):
+        latest_price = self.data.low[0]
+        for i in range(-days, 0):
+            low = self.data.low[i]
+            if low < latest_price:
+                latest_price = low
+        return latest_price   
+    
+    def find_up_days(self, days:int, min_days:int):
+        up_days = 0
+        for i in range(-days, 0):
+            if self.data.open[i] < self.data.close[i]:
+                 up_days + 1
+        return up_days >= min_days     
+            
     def next(self): 
         if not self.check_allow_sell_or_buy():
                 return

@@ -39,6 +39,9 @@ def allow_cerebro(symbol:Symbol, period:str ):
     
     if symbol.compute == False:
         return False
+    # 空白支票公司
+    if symbol.industry == 'Blank Checks':
+        return False
     # 成交量小于50万股的就不考虑
     # if period == '1d' and symbol.volume < 10 * 10000:
     #     return False

@@ -43,10 +43,12 @@ def list():
         filterList.append(Symbol.market == form.market.data  )
     if form.country.data is not None:
         filterList.append(Symbol.country == form.country.data )
-    if form.compute.data is not None and form.compute.data == False:
-        filterList.append(Symbol.compute == False )
-    elif form.compute.data is not None and form.compute.data == True:
-        filterList.append(Symbol.compute != False )
+    if form.compute.data is not None and form.compute.data == 0:
+        print(form.compute.data)
+        filterList.append(Symbol.compute == 0 )
+    elif form.compute.data is not None and form.compute.data == 1:
+        print(form.compute.data)
+        filterList.append(or_(Symbol.compute != 0, Symbol.compute.is_(None)))
         
     page_size = form.pageSize.data
     page_no = form.pageNo.data

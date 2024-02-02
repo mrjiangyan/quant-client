@@ -23,7 +23,7 @@ import traceback
 import argparse
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 25
+max_concurrent_downloads = 200
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
@@ -107,6 +107,8 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
         
+    if symbol.compute == 0:
+        return False
     # if symbol.last_price < 1 or symbol.last_price > 50:
     #     return False
      
