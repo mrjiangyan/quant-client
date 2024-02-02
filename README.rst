@@ -114,7 +114,7 @@ Documentation
 
 The discussions:
 
-  - `Discussions <(https://github.com/mrjiangyan/quant-client/discussions)>`_
+  - `Discussions <https://github.com/mrjiangyan/quant-client/discussions>`_
 
 Read the full documentation at:
 
