@@ -1,5 +1,4 @@
 import wtforms
-from .JsonForm import JsonForm
 from wtforms.validators import DataRequired, NumberRange
 from flask_wtf import FlaskForm
 

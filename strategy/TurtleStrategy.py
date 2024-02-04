@@ -124,7 +124,6 @@ class TurtleStrategy(BaseStrategy):
         for i in range(-days, 0):
             if self.data.open[i] < self.data.close[i]:
                 up_days = up_days + 1
-        print('up_days', up_days)
         return up_days >= min_days     
     
     def find_up_day(self, days:int, rate:float):

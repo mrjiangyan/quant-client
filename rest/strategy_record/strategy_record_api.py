@@ -3,7 +3,7 @@
 
 from .strategy_record_query_form import StrategyRecordQueryForm
 from .strategy_record_delete_form import StrategyRecordDeleteForm
-from .dto.StrategyRecordDetail import StrategyRecordSymbolDetail
+from .strategy_record_rename_form import StrategyRecordRenameForm
 from flask import request, Blueprint
 import importlib
 import inspect
@@ -78,6 +78,24 @@ def delete():
         return error_message(str(err))
     shutil.rmtree(form.path.data)
     return success('目录删除成功')
+
+
+# 修改策略记录任务名称
+@login_required
+@blueprint.route('/api/strategyRecord/rename', methods=['PUT'])
+def rename():
+    try:
+        form = StrategyRecordRenameForm()
+    except Exception as err:
+        return error_message(str(err))
+    old_directory_name = form.path.data
+    if not os.path.exists(old_directory_name):
+        return error_message(f'{form.path.data}任务不存在无法进行修改操作')
+    new_directory_name = old_directory_name.replace(os.path.basename(old_directory_name), form.taskName.data)
+    if os.path.exists(new_directory_name):
+            return error_message(f'{form.taskName.data}任务存在, 无法进行修改操作')
+    os.rename(old_directory_name, new_directory_name)
+    return success('任务名称修改成功')
 
 # 查出该策略记录下面每一只股票的明细
 @login_required
