@@ -10,5 +10,7 @@ class SymbolQueryForm(PageQueryForm):
     
     country = wtforms.StringField()
     
+    industry = wtforms.StringField()
+    
     compute = wtforms.IntegerField()
    

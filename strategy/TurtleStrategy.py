@@ -55,8 +55,11 @@ class TurtleStrategy(BaseStrategy):
         if  distince_days > 4 and self.data.close[0] > self.data.open[0] > self.bollinger.lines.top[0]:
             self.log('满足开盘价和收盘价都超出布林线的上轨的卖出策略')
             return True
-        if distince_days > 8 and self.data.close[-1] > self.bollinger.lines.top[-1] and  self.data.close[0]> self.bollinger.lines.top[0]:
+        if distince_days > 8 and self.data.close[-1] > self.bollinger.lines.top[-1]*1.02 and  self.data.close[0]> self.bollinger.lines.top[0]:
             self.log('满足连续两天收盘价超出布林线上轨的卖出策略')
+            return True
+        if (self.data.open[0]- self.bollinger.lines.top[0]) /self.bollinger.lines.top[0]> 0.15:
+            self.log('满足高开价格超过布林线上轨15%的卖出策略')
             return True
         return False
     
@@ -64,6 +67,11 @@ class TurtleStrategy(BaseStrategy):
     # 1.排除掉最近10天上涨超过 50% 的情况
     # 2.排除掉最近10天波动没有超过5%的情况
     def filter_buy(self):
+        # 前面10天内不能有涨幅超过20%的日期
+        if self.find_up_day(10, 0.2):
+           self.log('过去10天内有单日涨幅超过20%情况出现, 不予以考虑')
+           return True 
+       
         # 1.排除掉最近10天上涨超过 50% 的情况
         # recent_lowest = self.lowest_low.lines[0]
         # print((self.data.open[0] -recent_lowest) / recent_lowest)
@@ -74,19 +82,32 @@ class TurtleStrategy(BaseStrategy):
         # if (self.data.high[0] - latest_price)/ latest_price > 0.5:
         #     self.log('不满足10天内涨幅不超过35%的条件')
         #     return True
-        # latest_price = self.find_latest_price_with_days(50)
-        # if (self.data.high[0] - latest_price)/ latest_price > 0.5:
-        #     self.log('不满足50天内涨幅不超过50%的条件')
-        #     return True
+        days = 60
+        scale = 0.8
+        latest_price = self.find_latest_price_with_days(days)
+        if (self.data.high[0] - latest_price)/ latest_price > scale:
+            self.log(f'不满足{days}天内涨幅不超过{scale*100}%的条件')
+            return True
         # # 2.排除掉最近10天波动没有超过5%的情况
         # print((self.highest_high.lines[0] - recent_lowest)/recent_lowest)
         # if  (self.highest_high.lines[0] - recent_lowest)/recent_lowest < 0.05  :
         #     self.log('不满足最近10天波动超过5%的情况')
         #     return True
         
-        if self.find_up_days(10, 8):
-            self.log('过去10天内有超过8天上涨, 涨幅过大')
+        
+        
+        if self.find_up_days(7, 7) and (self.data.close[0] - self.data.close[-7])/ self.data.close[-7] > 0.3:
+            #判断涨幅，如果涨幅超过30%的才不能考虑
+            self.log('过去7天内有超过7天上涨, 涨幅过大')
             return True
+        if self.find_up_days(12, 10):
+                #判断涨幅，如果涨幅超过30%的才不能考虑
+            self.log('过去12天内有超过10天上涨, 涨幅过大')
+            return True
+        
+        #寻找过去30天内有超过 昨日成交量10倍的情况出现，不考虑买入 OSPN
+        
+        #如果买入日期的成交量是之前5天的 5倍以上 则放弃 CDZIP
         return False
     
     # 寻找N天内的最低价
@@ -102,8 +123,15 @@ class TurtleStrategy(BaseStrategy):
         up_days = 0
         for i in range(-days, 0):
             if self.data.open[i] < self.data.close[i]:
-                 up_days + 1
+                up_days = up_days + 1
+        print('up_days', up_days)
         return up_days >= min_days     
+    
+    def find_up_day(self, days:int, rate:float):
+        for i in range(-days, 0):
+            if (self.data.close[i] - self.data.close[i-1])/ self.data.close[i-1] > rate:
+                return True
+        return False    
             
     def next(self): 
         if not self.check_allow_sell_or_buy():

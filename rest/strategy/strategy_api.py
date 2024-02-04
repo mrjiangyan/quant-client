@@ -23,8 +23,6 @@ for index, strategy in enumerate(all_strategies):
     strategy_name = getattr(strategy.params, 'name')
     strategy_objects.append({ 'strategy_name':strategy_name, 'strategy': strategy.__name__ })
 
-print(strategy_objects)
-
 from auth.auth import login_required
 # from data import database
 # from data.model.business_engine import BusinessEngine
@@ -38,7 +36,7 @@ from auth.auth import login_required
 # from data.request.business_engine.sop_flow_device_update_form import SOPFlowDeviceUpdateForm
 
 # from monitor.camera_monitor import do_write_protocol_json
-from rest.ApiResult import ApiResult, error_message, success
+from rest.ApiResult import error_message, success
 # from rest.device.device_api import is_exist_device
 # from rest.device.monitoring_area_api import is_exist_monitoring_areas
 

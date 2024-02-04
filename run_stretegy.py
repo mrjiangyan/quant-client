@@ -199,8 +199,7 @@ def run_strategy(input_symbol, period, days, strategy_cls):
     if not os.path.exists(output_path):
         # 不存在则创建
         os.makedirs(output_path)
-    # database.global_init("edge.db")
- 
+   
     symbols = []
     # Get all symbols
     with database.create_database_session() as db_sess:
@@ -233,6 +232,8 @@ def run_strategy(input_symbol, period, days, strategy_cls):
     
 if __name__ == '__main__':
 
+    database.global_init("edge.db")
+ 
     input_symbol = None
     input_symbol = input(f"请输入需要回测的证券代码以空格分割（默认为全部）: ") or input_symbol
     period = '1d'

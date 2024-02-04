@@ -6,6 +6,7 @@ from .permission import permission_api
 from .strategy_record import strategy_record_api
 from .history import history_api
 from .backtrader import backtrader_api
+from .dict import dict_api
 
 from flask import Flask
 
@@ -19,3 +20,4 @@ def register_api(app:Flask):
     app.register_blueprint(strategy_record_api.blueprint)
     app.register_blueprint(history_api.blueprint)
     app.register_blueprint(backtrader_api.blueprint)
+    app.register_blueprint(dict_api.blueprint)

@@ -12,7 +12,7 @@ from .symbol_query_form import SymbolQueryForm
 from .symbol_form import SymbolModifyForm
 from data.model.t_symbol import Symbol
 from data.service.symbol_service import get_by_symbol
-from rest.ApiResult import ApiResult, error_message, success
+from rest.ApiResult import error_message, success
 
 blueprint = Blueprint(
     'symbol_api',
@@ -29,38 +29,38 @@ def list():
     except Exception as err:
         return error_message(str(err))
 
-    db_sess = database.create_session()
+    with database.create_database_session() as db_sess:   
 
-    symbol_query = db_sess.query(Symbol)
+        symbol_query = db_sess.query(Symbol)
 
-    filterList = []
+        filterList = []
 
-    if form.symbol.data:
-        filterList.append(Symbol.symbol == form.symbol.data )
-    if form.keyword.data:
-        filterList.append(or_(Symbol.name.like(f'%{form.keyword.data}%'), Symbol.symbol.like(f'%{form.keyword.data}%')))
-    if form.market.data is not None:
-        filterList.append(Symbol.market == form.market.data  )
-    if form.country.data is not None:
-        filterList.append(Symbol.country == form.country.data )
-    if form.compute.data is not None and form.compute.data == 0:
-        print(form.compute.data)
-        filterList.append(Symbol.compute == 0 )
-    elif form.compute.data is not None and form.compute.data == 1:
-        print(form.compute.data)
-        filterList.append(or_(Symbol.compute != 0, Symbol.compute.is_(None)))
-        
-    page_size = form.pageSize.data
-    page_no = form.pageNo.data
-    offset = get_offset(page_no, page_size)
-    if form.order.data == 'asc':
-        sort_expression = asc(getattr(Symbol, form.column.data))
-    else:
-        sort_expression = desc(getattr(Symbol, form.column.data))
+        if form.symbol.data:
+            filterList.append(Symbol.symbol == form.symbol.data )
+        if form.keyword.data:
+            filterList.append(or_(Symbol.name.like(f'%{form.keyword.data}%'), Symbol.symbol.like(f'%{form.keyword.data}%')))
+        if form.market.data is not None:
+            filterList.append(Symbol.market == form.market.data  )
+        if form.country.data is not None:
+            filterList.append(Symbol.country == form.country.data )
+        if form.industry.data is not None:
+                filterList.append(Symbol.industry == form.industry.data )
+        if form.compute.data is not None and form.compute.data == 0:
+            filterList.append(Symbol.compute == 0 )
+        elif form.compute.data is not None and form.compute.data == 1:
+            filterList.append(or_(Symbol.compute != 0, Symbol.compute.is_(None)))
+            
+        page_size = form.pageSize.data
+        page_no = form.pageNo.data
+        offset = get_offset(page_no, page_size)
+        if form.order.data == 'asc':
+            sort_expression = asc(getattr(Symbol, form.column.data))
+        else:
+            sort_expression = desc(getattr(Symbol, form.column.data))
 
-    record_list = symbol_query.filter(*filterList).order_by(sort_expression).offset(offset).limit(form.pageSize.data).all()
+        record_list = symbol_query.filter(*filterList).order_by(sort_expression).offset(offset).limit(form.pageSize.data).all()
 
-    record_count = symbol_query.filter(*filterList).count()
+        record_count = symbol_query.filter(*filterList).count()
 
     page_result = {
         "current": page_no,
@@ -75,12 +75,11 @@ def list():
 @login_required
 @blueprint.route('/api/symbol/<string:symbol>/<string:market>', methods=['GET'])
 def get_symbol(symbol, market):
-    db_sess = database.create_session()
+    with database.create_database_session() as db_sess:   
+        symbol = get_by_symbol(db_sess, symbol, market)
 
-    symbol = get_by_symbol(db_sess, symbol, market)
-
-    if symbol is None:
-        return error_message(f'不存在该symbol:{symbol}')
+        if symbol is None:
+            return error_message(f'不存在该symbol:{symbol}')
     return success(symbol.to_dict())
 
 # 屏蔽
@@ -92,16 +91,15 @@ def disable():
     except Exception as err:
         return error_message(str(err))
 
-    db_sess = database.create_session()
+    with database.create_database_session() as db_sess:   
+        symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
 
-    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
-
-    if symbol is None:
-        return error_message(f'不存在该symbol:{form.symbol.data}')
-    
-    symbol.compute = False
-    db_sess.merge(symbol)
-    db_sess.commit()
+        if symbol is None:
+            return error_message(f'不存在该symbol:{form.symbol.data}')
+        
+        symbol.compute = False
+        db_sess.merge(symbol)
+        db_sess.commit()
     return success(message='屏蔽成功')
 
 # 取消屏蔽
@@ -113,16 +111,15 @@ def enable():
     except Exception as err:
         return error_message(str(err))
 
-    db_sess = database.create_session()
+    with database.create_database_session() as db_sess:   
+        symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
 
-    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
-
-    if symbol is None:
-        return error_message(f'不存在该symbol:{form.symbol.data}')
-    
-    symbol.compute = True
-    db_sess.merge(symbol)
-    db_sess.commit()
+        if symbol is None:
+            return error_message(f'不存在该symbol:{form.symbol.data}')
+        
+        symbol.compute = True
+        db_sess.merge(symbol)
+        db_sess.commit()
     return success(message='取消屏蔽成功')
     
 # 进行编辑操作
@@ -134,18 +131,15 @@ def update():
     except Exception as err:
         return error_message(str(err))
 
-    db_sess = database.create_session()
+    with database.create_database_session() as db_sess:   
+        symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
 
-    symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
-
-    if symbol is None:
-        return error_message(f'不存在该symbol:{form.symbol.data}')
-    
-    print(symbol)
-    symbol.cn_name = form.cn_name.data
-    print(symbol.cn_name)
-    db_sess.merge(symbol)
-    db_sess.commit()
+        if symbol is None:
+            return error_message(f'不存在该symbol:{form.symbol.data}')
+        
+        symbol.cn_name = form.cn_name.data
+        db_sess.merge(symbol)
+        db_sess.commit()
     return success(message='编辑成功')
     
    

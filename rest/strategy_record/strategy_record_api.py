@@ -142,14 +142,13 @@ def quert_detail_log():
             elif "卖出完成" in line:
                 # 解析买入日期和买入价格相关数据
                # 使用正则表达式提取买入价格和买入数量
-                print(line, sell_date)
                 sell_price = re.search(r'价格\s+(\d+\.\d+)', line).group(1)
                 sell_quantity = re.search(r'数量\s*(-\d+)', line).group(1)
                 # 创建一个字典存储买入日期和买入价格
                 point_data = {
                     'name': 'simpleAnnotation',
                     'extendData': f'卖出:{sell_price}\r\n数量:{sell_quantity}',
-                    'points': [{ 'timestamp': datetime.strptime(sell_date, "%Y-%m-%d").timestamp() * 1000, 'value': float(buy_price) }],
+                    'points': [{ 'timestamp': datetime.strptime(sell_date, "%Y-%m-%d").timestamp() * 1000, 'value': float(sell_price) }],
                 }
                 points.append(point_data)
     
@@ -227,7 +226,6 @@ def recursive_directory_info(root_directory, params:StrategyRecordQueryForm):
                 continue
             if params.strategy_name.data and params.strategy_name.data not in root:
                 continue
-            print(dir)
             directory_info = get_directory_info(os.path.join(sub_dir, dir))
             directory_info['strategy_name'] = root
             directory_infos.append(directory_info)
