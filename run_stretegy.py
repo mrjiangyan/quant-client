@@ -34,14 +34,16 @@ def get_all_classes(module_name):
 all_strategies = get_all_classes(module_name)
 
 def allow_cerebro(symbol:Symbol, period:str ):
+   
     if not (1 < symbol.last_price < 200):
         return False
     
     if symbol.compute == False:
         return False
     # 空白支票公司
-    if symbol.industry == 'Blank Checks':
-        return False
+    # if symbol.industry == 'Blank Checks':
+    #     logger.info(False)
+    #     return False
     # 成交量小于50万股的就不考虑
     # if period == '1d' and symbol.volume < 10 * 10000:
     #     return False
@@ -52,7 +54,7 @@ def allow_cerebro(symbol:Symbol, period:str ):
 
 def process_strategy(symbol: Symbol, period:str, start_datetime:datetime, strategy_cls, output_path:str ):
     try:
-        if allow_cerebro(symbol, period) == False:
+        if not allow_cerebro(symbol, period):
             return symbol, None
 
         datapath = os.path.join(current_working_directory, 'resources', f'historical_data/{period}/{symbol.symbol}.csv')
@@ -60,16 +62,19 @@ def process_strategy(symbol: Symbol, period:str, start_datetime:datetime, strate
             return symbol.symbol, None
 
         existing_data = pd.read_csv(datapath, parse_dates=['Date'], index_col='Date')
+        #.fillna(0.0)
            
         if existing_data is None or existing_data.empty:
             return symbol , None
         
+            
         existing_data = (existing_data.loc[(existing_data['Volume'] != 0) & (existing_data['Volume'].notna())]
                 .loc[(existing_data['Open'] != 0) & (existing_data['Open'].notna())]
                 .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
 
         if len(existing_data) < 50:
-                return symbol , None
+            logger.info(existing_data)
+            return symbol , None
         print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')
 
@@ -215,7 +220,6 @@ def run_strategy(input_symbol, period, days, strategy_cls):
     
     symbols = [symbol for symbol in symbols if symbol is not None]
 
-
     with concurrent.futures.ThreadPoolExecutor(max_workers= 50) as executor:
         futures = [executor.submit(process_strategy, symbol, period, start_datetime, strategy_cls, output_path ) for symbol in symbols]
 
@@ -245,8 +249,7 @@ if __name__ == '__main__':
     days = int(default_days)
 
     strategy_cls = select_strategy()
- 
-    print(strategy_cls)
+
     
     run_strategy(input_symbol, period, days, strategy_cls)
 

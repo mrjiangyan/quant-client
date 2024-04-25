@@ -1,17 +1,19 @@
 import os
 import time
 from datetime import datetime, time
-import resource
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # 获取当前资源限制
-soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
-print(f"Current soft limit: {soft_limit}, hard limit: {hard_limit}")
+# soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+# print(f"Current soft limit: {soft_limit}, hard limit: {hard_limit}")
 
-# 设置文件描述符数量限制为无穷大
-resource.setrlimit(resource.RLIMIT_NOFILE, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+# # 设置文件描述符数量限制为无穷大
+# resource.setrlimit(resource.RLIMIT_NOFILE, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
-# 获取设置后的资源限制
-soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
-print(f"Updated soft limit: {soft_limit}, updated hard limit: {hard_limit}")
+# # 获取设置后的资源限制
+# soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+# print(f"Updated soft limit: {soft_limit}, updated hard limit: {hard_limit}")
 import concurrent.futures
 from data.service.symbol_service import getAll, get_by_symbol
 from data import database
@@ -23,18 +25,20 @@ import traceback
 import argparse
 
 # Limit the number of symbols to download concurrently
-max_concurrent_downloads = 200
+max_concurrent_downloads = 25
 
 file_expire_seconds = 6 * 60 * 60 
 index_col = 'Date'
 interval_map = {"1d": 'max', '1m': '1d', '5m': '7d', '15m': '7d', '1wk': 'max', "1h": 'ytd', "60m": 'ytd' }
 interval_map = { "1d": 'max' , '1m': '1d', "1h": 'ytd','1wk': 'max'}
 interval_map = { "1d": 'max','1wk': 'max', '1m': '1d' }
+interval_map = { "1d": 'max','1wk': 'max' }
+interval_map = { "1d": 'max' }
 
 # Function to download historical data for a symbol
 def download_data(symbol:Symbol, root_path):
     symbol_code = symbol.symbol.replace(" ", "")
-    print(symbol_code)
+    # print(symbol_code)
     for key, value in interval_map.items():
         try:
             directory_path =  os.path.join(root_path,  key)
@@ -48,8 +52,11 @@ def download_data(symbol:Symbol, root_path):
     
 
 def download_yahoo(symbol:Symbol, period, interval, file_path):
+    print(symbol.symbol, period)
     ticker = Ticker(symbol.symbol)
     df = ticker.history(period=period, interval=interval)
+    print(symbol.symbol, period, '获取到数据')
+                
     if df.empty or 'date' not in df.index.names:
         logger.warning(f'{symbol.symbol},period:{period},interval:{interval} data is empty')
         return

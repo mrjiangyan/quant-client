@@ -180,7 +180,7 @@ def get_directory_info(directory):
     directory_info = {
         'path': directory,  # 添加完整路径信息
         'name': os.path.basename(directory),
-        'create_time': datetime.fromtimestamp(os.path.getctime(directory)).strftime('%Y-%m-%d %H:%M'),
+        'create_time': datetime.fromtimestamp(os.stat(directory).st_birthtime).strftime('%Y-%m-%d %H:%M'),
         'file_count': 0
     }
 
@@ -236,7 +236,6 @@ def recursive_directory_info(root_directory, params:StrategyRecordQueryForm):
     subdirectories = [content for content in contents if os.path.isdir(os.path.join(root_directory, content))]
 
     for root in subdirectories:
-        print(f"Directory: {root}")
         #根据该目录找策略名称
         sub_dir = os.path.join(root_directory, root)
         for dir in os.listdir(sub_dir):

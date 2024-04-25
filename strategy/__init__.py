@@ -1,6 +1,6 @@
 from .BaseStrategy import BaseStrategy
 from .MacdStrategy import MacdStrategy
-from .BollingerStrategy import BollingerStrategy
+from .FastDropReboundStrategy import FastDropReboundStrategy
 from .MacdTrendStrategy import MacdTrendStrategy
 from .RapidReboundContinuousDeclineStrategy import RapidReboundContinuousDeclineStrategy
 from .monitor.__init__ import ContinuousDeclineOpportunityMonitorStrategy
