@@ -21,7 +21,6 @@ class FastDropReboundStrategy(BaseStrategy):
     def has_dropped_more_than_25_percent(self):
             # 获取过去 10 天的最高价和最低价
         high_prices = [self.data.high.get(ago=-i, size=1)[0] for i in range(0, 10)]
-        low_prices = [self.data.low.get(ago=-i, size=1)[0] for i in range(0, 10)]
         
         # 计算最近 10 天的最高价
         highest_high = max(high_prices)
@@ -35,23 +34,23 @@ class FastDropReboundStrategy(BaseStrategy):
    
     def has_consecutive_down_days(self):
         self.consecutive_down_days = 0
-        recent_lows = [self.data.low.get(ago=-i, size=1)[0] for i in range(1, self.params.min_down_days + 1)]
+        recent_lows = [self.data.low.get(ago=-i, size=1)[0] for i in range(1, 7 + 1)]
         
         # 检查最近7个交易日中至少有5天的最低价要低于上一个交易日的最低价
         min_days_below_prev = sum(1 for low, prev_low in zip(recent_lows, recent_lows[1:]) if low < prev_low)
         
-        self.log(min_days_below_prev)
-        if min_days_below_prev >= self.params.min_down_days - 2:
+        # print(recent_lows)
+        # logger.info(min_days_below_prev)
+        if min_days_below_prev >= self.params.min_down_days:
             # 检查最近4个交易日的最低价均需要低于上一个交易日
             if all(low < prev_low for low, prev_low in zip(recent_lows[-self.params.recent_days:], recent_lows[-self.params.recent_days-1:-1])):
                 return True
         return False
     
     def next(self):
-        
-        self.log(self.data.date[0])
+        # and self.has_dropped_more_than_25_percent()
         # 在满足条件时执行买入和卖出
-        if self.has_consecutive_down_days() and self.has_dropped_more_than_25_percent():
+        if self.has_consecutive_down_days() :
             # 确保第二天的交易日可用
             if len(self.datas[0]) > 1:
                 # 在第二天进行买入

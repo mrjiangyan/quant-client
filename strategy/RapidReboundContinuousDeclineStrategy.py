@@ -7,12 +7,8 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
     params = (
         ("name", '连续阴线快速下跌买入策略'), 
         ("decline_percentage", 0.6),  # 下跌幅度
-        ("consecutive_decline_days_config", 5),  # 连续下跌天数
+        ("consecutive_decline_days_config", 4),  # 连续下跌天数
         ("volume_shrink_percentage", 0.80),  # 量能萎缩百分比
-        ("sell_cross", True),  # 是否根据死叉卖出
-        ("sell_gain_percentage", [0.3, 0.2, 0.15]),  # 涨幅达到20%时卖出
-        ("print_signal_condition", True),  # 打印输出信号条件不满足的情况
-        ("day_decline_percentage", 0.4), #日最大跌幅限制
     )
 
     def __init__(self, *argv):
@@ -65,26 +61,9 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
 
         avarige_volume = total_volumes/days 
         #需要满足最大成交量，最小成交量以及购买日的成交量需要小于平均成交量的需求
-        return max_volume > 50000 and (avarige_volume > self.data.volume[0] and avarige_volume > 10000) or self.data.volume[0] < 10000
-    
-    
-    
-    def check_bolling(self):
-        #保证买入那一天的最低价要在布林线下轨上方
-        return self.data.low[0] > self.bollinger.lines.bot[0]
-    
-    
-    def check_macd(self):
-        return self.macd.macd[0] < 0 and self.macd.macd[0] < self.macd.signal[0]
+        return max_volume > 200000 and (avarige_volume > self.data.volume[0] and avarige_volume > 100000) or self.data.volume[0] < 10000
     
 
-    def check_day_decline_percentage(self):
-        for i in range(-self.consecutive_decline_days+1, 0):
-            close = self.data.close[i]
-            if (self.data.close[i-1] - close)/self.data.close[i-1] > self.params.day_decline_percentage:
-                return False
-        return True
-    
     def reset(self):
         self.consecutive_decline_days = 0
         
@@ -98,22 +77,6 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
                 sell_signal = distince_days > 14
                 if  sell_signal:
                     self.log(f'锁仓2周时间限制条件满足')
-            if sell_signal == False and distince_days<=7:
-                sell_signal = self.calculate_profit_percentage() > self.params.sell_gain_percentage[0]
-                if  sell_signal:
-                    self.log(f'卖出涨幅1周内{self.params.sell_gain_percentage[0]*100:.2f}%条件满足')
-            if sell_signal == False and distince_days<=10:
-                sell_signal = self.calculate_profit_percentage() > self.params.sell_gain_percentage[1] 
-                if sell_signal:
-                    self.log(f'卖出涨幅10天内{self.params.sell_gain_percentage[1]*100:.2f}%条件满足')
-            if sell_signal == False and distince_days<=14:
-                sell_signal = self.calculate_profit_percentage() > self.params.sell_gain_percentage[2]
-                if  sell_signal:
-                    self.log(f'卖出涨幅2周内{self.params.sell_gain_percentage[2]*100:.2f}%条件满足')
-            if sell_signal == False:
-                sell_signal = distince_days > 5 and (self.order.executed.price - self.data.low[0])/ self.order.executed.price  > 0.10
-                if  sell_signal:
-                    self.log(f'止损位条件满足')
             
         
             if sell_signal:
@@ -133,35 +96,9 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
 
         buy_signal = self.consecutive_decline_days >= self.params.consecutive_decline_days_config and self.consecutive_decline_condition()
         
-        if buy_signal == True:
-            buy_signal = self.check_macd()
-            if not buy_signal:
-                self.log(f'macd条件不满足,DIF:{self.macd.macd[0]}, DEA:{self.macd.signal[0]}, MACD:{self.macd.macd - self.macd.signal}')
-                return
-        
-        if buy_signal == True:
-            buy_signal  = self.check_bolling()
-            if not buy_signal:
-                self.log(f'1.布林线下轨条件不满足, 下轨:{self.bollinger.lines.bot[0]},最低价:{self.data.low[0]},收盘价:{self.data.close[0]}')
-                self.reset()
-                return
-        
-        if buy_signal == True and not self.check_day_decline_percentage():
-            self.log(f'有日最大跌幅超过限制:{self.params.day_decline_percentage*100:.2f}')
-            self.reset()
-            return
-        
         if buy_signal and self.last_sell_day and (self.data.datetime.date(0) - self.last_sell_day).days < 10:
             buy_signal =  False
-        
-        #需要买入日期的成交量不能大于50万  
-        # if buy_signal and (self.data.volume[0] > 40 * 10000):
-        #     # self.reset()
-        #     print('buy_signal and ({self.data.volume[0]:.0f} > 40 * 10000)')
-        #     return
-        # buy_signal =  buy_signal
        
-        
         if buy_signal:
            buy_signal = self.check_volume(self.consecutive_decline_days)
            if not buy_signal:

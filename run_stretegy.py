@@ -35,7 +35,7 @@ all_strategies = get_all_classes(module_name)
 
 def allow_cerebro(symbol:Symbol, period:str ):
    
-    if not (1 < symbol.last_price < 200):
+    if not (0.55 < symbol.last_price < 50):
         return False
     
     if symbol.compute == False:
@@ -73,7 +73,6 @@ def process_strategy(symbol: Symbol, period:str, start_datetime:datetime, strate
                 .loc[(existing_data['Close'] != 0) & (existing_data['Close'].notna())])
 
         if len(existing_data) < 50:
-            logger.info(existing_data)
             return symbol , None
         print(symbol.symbol)
         existing_data.index = pd.to_datetime(existing_data.index, utc=True, errors='coerce')

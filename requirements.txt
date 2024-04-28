@@ -14,13 +14,8 @@ retrying
 # pyfolio==0.9.2
 # pymysql==1.1.0
 
-
-robotframework-browser
-selenium
-robotframework-seleniumlibrary
 certifi
-rpaframework
-gunicorn=21.2.0
+gunicorn
 
 # wtforms
 # jwt
