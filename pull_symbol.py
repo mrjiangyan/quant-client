@@ -42,6 +42,7 @@ with database.create_database_session() as db_sess:
             if domain is None:
                 domain = Symbol()
                 domain.symbol = symbol
+                domain.short = 1
                 is_create = True
             print(row)
             if domain.country != row['Country']  and not row['Country']:

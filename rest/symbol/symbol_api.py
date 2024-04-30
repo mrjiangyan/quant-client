@@ -10,6 +10,7 @@ from auth.auth import login_required
 from data import database
 from .symbol_query_form import SymbolQueryForm
 from .symbol_form import SymbolModifyForm
+from .symbol_short_form import SymbolShortForm
 from data.model.t_symbol import Symbol
 from data.service.symbol_service import get_by_symbol
 from rest.ApiResult import error_message, success
@@ -49,6 +50,9 @@ def list():
             filterList.append(Symbol.compute == 0 )
         elif form.compute.data is not None and form.compute.data == 1:
             filterList.append(or_(Symbol.compute != 0, Symbol.compute.is_(None)))
+        
+        if form.short.data is not None:
+                filterList.append(Symbol.short == form.short.data )
             
         page_size = form.pageSize.data
         page_no = form.pageNo.data
@@ -101,6 +105,25 @@ def disable():
         db_sess.merge(symbol)
         db_sess.commit()
     return success(message='屏蔽成功')
+
+@login_required
+@blueprint.route('/api/symbol/short', methods=['PUT'])
+def short(): 
+    try:
+        form = SymbolShortForm().validate_for_api()
+    except Exception as err:
+        return error_message(str(err))
+
+    with database.create_database_session() as db_sess:   
+        symbol = get_by_symbol(db_sess, form.symbol.data, form.market.data)
+        if symbol is None:
+            return error_message(f'不存在该symbol:{form.symbol.data}')
+        
+        symbol.short = form.short.data
+        db_sess.merge(symbol)
+        db_sess.commit()
+    return success(message='是否支持做空设置成功')
+
 
 # 取消屏蔽
 @login_required

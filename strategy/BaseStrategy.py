@@ -8,7 +8,7 @@ class BaseStrategy(bt.Strategy):
         ("shared_variable", [False]),
         ("start_date", None),
         ("end_date", None),
-        ("percent_of_cash", 0.9),
+        ("percent_of_cash", 0.7),
         ("log_file_path", None),
         ("period", 9),
         ("k_period", 3),
@@ -38,12 +38,15 @@ class BaseStrategy(bt.Strategy):
         self.order = None  # 用于存储订单对象的属性
           # Add your MACD indicator here
         self.trade = None
-        self.buyprice = 0      
+        self.buyprice = 0    
+        self.sellprice = 0      
         self.macd = bt.indicators.MACD()
         self.rsi = bt.indicators.RSI(self.datas[0])
         self.buy_date_data = None
         self.sell_date_data = None
         self.last_sell_day = None
+        #是否卖空的交易方式
+        self.is_short = False
         
         # Add Bollinger Bands
         self.bollinger = bt.indicators.BollingerBands()
@@ -85,20 +88,25 @@ class BaseStrategy(bt.Strategy):
         if not self.check_allow_sell_or_buy():
             return False
         
-        cash_to_spend = self.broker.get_cash() * self.params.percent_of_cash
-       
-        if cash_to_spend <= 0:
-            return False
+        cash_to_spend = 0
+        if not self.is_short:
+            cash_to_spend = self.broker.get_cash() * self.params.percent_of_cash
+        
+            if cash_to_spend <= 0:
+                return False
 
-        # Consider commission and slippage in the size calculation
-        commission_info = self.broker.getcommissioninfo(self.data)
-        commission = commission_info.getcommission(self.data.close[0], self.data.volume[0])
-        buy_value= (cash_to_spend - commission) / self.data.close[0]
-       
-        if buy_value <= 0:
+            # Consider commission and slippage in the size calculation
+            commission_info = self.broker.getcommissioninfo(self.data)
+            commission = commission_info.getcommission(self.data.close[0], self.data.volume[0])
+            buy_value= (cash_to_spend - commission) / self.data.close[0]
+            self.order = self.buy(size=int(buy_value), price=self.data.close[0], exectype=bt.Order.Market)
+        else:
+            buy_value= self.position.size
+            self.order = self.buy(size=int(buy_value), price=self.data.low[0], exectype=bt.Order.Market)
+        if buy_value == 0:
             return False
         # self.order = self.buy(size=int(buy_value), price = self.data.close[0], exectype = bt.Order.Market )
-        self.order = self.buy(size=int(buy_value), price=self.data.close[0], exectype=bt.Order.Market)
+       
         self.buy_date_data = {
                     'date': self.datas[0].datetime.date(0),
                     'open': self.datas[0].open[0],
@@ -113,8 +121,8 @@ class BaseStrategy(bt.Strategy):
     def internal_sell(self):
         if not self.check_allow_sell_or_buy():
             return
-        position_size = self.position.size
-        if position_size <= 0:
+        sell_size = self.position.size
+        if sell_size <= 0 and not self.is_short:
             return
 
         self.sell_date_data = {
@@ -125,7 +133,14 @@ class BaseStrategy(bt.Strategy):
                     'close': self.datas[0].close[0],
                     'volume': self.datas[0].volume[0],
                 }
-        self.sell(size= position_size)
+        
+        if self.is_short:
+            cash_to_spend = self.broker.get_cash() * self.params.percent_of_cash
+       
+            if cash_to_spend <= 0:
+                return False
+            sell_size = (cash_to_spend) / self.data.close[0]
+        self.sell(size= sell_size)
         self.last_sell_day = self.datas[0].datetime.date(0)
         return True
     
@@ -140,9 +155,16 @@ class BaseStrategy(bt.Strategy):
                 self.log(f"买入日期: {execution_date}, 开盘价: {self.buy_date_data['open']:.2f}, 最高价: {self.buy_date_data['high']:.2f}, 最低价: {self.buy_date_data['low']:.2f}, 收盘价: {self.buy_date_data['close']:.2f}, 交易量: {self.buy_date_data['volume']:.2f}")
                 self.log(f"买入完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f},手续费{order.executed.comm:.2f}")
                 self.buyprice = order.executed.price
+                self.print_bolling()
+                self.print_kdj()
+                self.print_macd()
             elif order.issell():
+                self.sellprice = order.executed.price
                 self.log(f"卖出日期: {execution_date}, 开盘价: {self.sell_date_data['open']:.2f}, 最高价: {self.sell_date_data['high']:.2f}, 最低价: {self.sell_date_data['low']:.2f}, 收盘价: {self.sell_date_data['close']:.2f}, 交易量: {self.sell_date_data['volume']:.2f}")
-                self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},手续费{order.executed.comm:.2f}")
+                self.log(f"卖出完成: 价格 {order.executed.price:.2f},数量 {order.executed.size:.0f},总金额:{order.executed.value:.2f},手续费{order.executed.comm:.2f}")
+                self.print_bolling()
+                self.print_kdj()
+                self.print_macd()
         # Check if an order has been canceled/rejected
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('订单取消/拒绝')
@@ -161,6 +183,8 @@ class BaseStrategy(bt.Strategy):
     def print_turnover_rate(self, volume:int):
         if self.params.symbol.shares_outstanding and self.params.symbol.shares_outstanding != 0:
             self.log(f'换手率:{(volume*100)/self.params.symbol.shares_outstanding:.2f}')
+    
+    #换手率的计算
     
     def turnover_rate(self, volume:int):
         if self.params.symbol.shares_outstanding and self.params.symbol.shares_outstanding != 0:
@@ -203,7 +227,7 @@ class BaseStrategy(bt.Strategy):
         #     return
         self.trade = trade
         # print(trade)
-        self.log(f'交易盈亏: 毛盈亏 {trade.pnl:.2f}, 净盈亏 {trade.pnlcomm:.2f}')
+        self.log(f'交易盈亏: 毛盈亏 {trade.pnl:.2f}, 净盈亏 {trade.pnlcomm:.2f}, 账户余额:{self.broker.get_cash()}')
 
     # def next(self):
     #     self.auto_sell()

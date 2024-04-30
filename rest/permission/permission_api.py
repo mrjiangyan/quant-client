@@ -69,56 +69,56 @@ def getPermCode():
 @blueprint.route('/api/permission/getUserPermissionByToken', methods=['GET'])
 def getUserPermissionByToken(): 
     return success({
-        "allAuth": [
-            {
-                "action": "system:user:add",
-                "describe": "新增用户",
-                "type": "1",
-                "status": "1"
-            }
-        ],
-        "auth": [
-            {
-                "action": "system:user:add",
-                "describe": "新增用户",
-                "type": "1"
-            }
-        ],
+        # "allAuth": [
+        #     {
+        #         "action": "system:user:add",
+        #         "describe": "新增用户",
+        #         "type": "1",
+        #         "status": "1"
+        #     }
+        # ],
+        # "auth": [
+        #     {
+        #         "action": "system:user:add",
+        #         "describe": "新增用户",
+        #         "type": "1"
+        #     }
+        # ],
         "menu": [
-            {
-                "redirect": None,
-                "path": "/base/system/user",
-                "component": "system/user/index",
-                "route": "1",
-                "meta": {
-                    "keepAlive": False,
-                    "internalOrExternal": False,
-                    "icon": "ant-design:tag-twotone",
-                    "componentName": "index",
-                    "title": "用户管理"
-                },
-                "homepageFlag": 0,
-                "name": "base-system-user",
-                "id": "1642792505780813826",
-                "isNavigation": False
-            },
-            {
-                "redirect": None,
-                "path": "/base/system/roles1",
-                "component": "system/role/index",
-                "route": "1",
-                "meta": {
-                    "keepAlive": False,
-                    "internalOrExternal": False,
-                    "icon": "ant-design:tag-twotone",
-                    "componentName": "index",
-                    "title": "角色管理"
-                },
-                "homepageFlag": 0,
-                "name": "base-system-roles1",
-                "id": "1641750607694983170",
-                "isNavigation": False
-            },
+            # {
+            #     "redirect": None,
+            #     "path": "/base/system/user",
+            #     "component": "system/user/index",
+            #     "route": "1",
+            #     "meta": {
+            #         "keepAlive": False,
+            #         "internalOrExternal": False,
+            #         "icon": "ant-design:tag-twotone",
+            #         "componentName": "index",
+            #         "title": "用户管理"
+            #     },
+            #     "homepageFlag": 0,
+            #     "name": "base-system-user",
+            #     "id": "1642792505780813826",
+            #     "isNavigation": False
+            # },
+            # {
+            #     "redirect": None,
+            #     "path": "/base/system/roles1",
+            #     "component": "system/role/index",
+            #     "route": "1",
+            #     "meta": {
+            #         "keepAlive": False,
+            #         "internalOrExternal": False,
+            #         "icon": "ant-design:tag-twotone",
+            #         "componentName": "index",
+            #         "title": "角色管理"
+            #     },
+            #     "homepageFlag": 0,
+            #     "name": "base-system-roles1",
+            #     "id": "1641750607694983170",
+            #     "isNavigation": False
+            # },
             {
                 "redirect": False,
                 "path": "/quant/symbol",
@@ -153,23 +153,23 @@ def getUserPermissionByToken():
                 "id": "1649950945614311425",
                 "isNavigation": False
             },
-            {
-                "redirect": False,
-                "path": "/setting/dict",
-                "component": "system/dict/index",
-                "route": "1",
-                "meta": {
-                    "keepAlive": False,
-                    "internalOrExternal": False,
-                    "icon": "ant-design:audit-outlined",
-                    "componentName": "index",
-                    "title": "数据字典"
-                },
-                "homepageFlag": 0,
-                "name": "setting-dict",
-                "id": "1683358416035053570",
-                "isNavigation": False
-            },
+            # {
+            #     "redirect": False,
+            #     "path": "/setting/dict",
+            #     "component": "system/dict/index",
+            #     "route": "1",
+            #     "meta": {
+            #         "keepAlive": False,
+            #         "internalOrExternal": False,
+            #         "icon": "ant-design:audit-outlined",
+            #         "componentName": "index",
+            #         "title": "数据字典"
+            #     },
+            #     "homepageFlag": 0,
+            #     "name": "setting-dict",
+            #     "id": "1683358416035053570",
+            #     "isNavigation": False
+            # },
             {
                 "redirect": False,
                 "path": "/quant/strategyRecord",

@@ -7,13 +7,17 @@ from .strategy_record_rename_form import StrategyRecordRenameForm
 from flask import request, Blueprint
 import importlib
 import inspect
+
 import os
+import platform
+import time
 from datetime import datetime
 import math
 import shutil
 from auth.auth import login_required
 from urllib.parse import unquote
-
+system = platform.system()
+ 
 from rest.ApiResult import error_message, success
 from rest.PageResult import PageResult
 import re
@@ -176,11 +180,18 @@ def quert_detail_log():
 
 
 def get_directory_info(directory):
+    stat_result = os.stat(directory)
+    if hasattr(stat_result, 'st_birthtime'):
+        birthtime = stat_result.st_birthtime
+    else:
+        # 否则，根据系统选择相似的时间属性
+        birthtime = stat_result.st_ctime
+
     # 初始化目录信息字典
     directory_info = {
         'path': directory,  # 添加完整路径信息
         'name': os.path.basename(directory),
-        'create_time': datetime.fromtimestamp(os.stat(directory).st_birthtime).strftime('%Y-%m-%d %H:%M'),
+        'create_time': time.strftime('%Y-%m-%d %H:%M', time.localtime(birthtime)),
         'file_count': 0
     }
 

@@ -23,6 +23,7 @@ class Symbol(SqlAlchemyBase, SerializerMixin):
     shares_outstanding = Column("shares_outstanding", Integer, doc="总股本")
     change = Column("change", Float, doc="涨跌幅度")
     compute = Column("compute", Boolean, index=True, doc="屏蔽")
+    short = Column("short", Integer, index=True, doc="是否卖空")
     gmtUpdate = Column("gmt_update", DateTime, default=func.now(), onupdate=func.now(), doc="更新时间")
    
     

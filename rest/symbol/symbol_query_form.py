@@ -13,4 +13,6 @@ class SymbolQueryForm(PageQueryForm):
     industry = wtforms.StringField()
     
     compute = wtforms.IntegerField()
+    
+    short = wtforms.IntegerField()
    

@@ -5,7 +5,7 @@ import traceback
 from auth import auth
 import monitor
 from rest.ApiResult import error_message
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from loguru import logger
 import os
@@ -36,9 +36,8 @@ def create_app():
     # monitor.start_monitor()
     # add_task()
     # 解决跨域问题
-    CORS(app)
+    CORS(app, resources=r'/*')
     return app
-
 
 
 def config_logging():
@@ -53,6 +52,18 @@ app = create_app()
 def not_found(error):
     logger.error(error)
     return make_response(jsonify({'error': 'Not found'}), 404)
+
+# @app.after_request
+# def add_cors_headers(response):
+#     # 设置 Access-Control-Allow-Origin 头为允许所有来源的请求跨域访问
+#     response.headers['Access-Control-Allow-Origin'] = '*'
+    
+#      # 如果请求方法为 OPTIONS，则设置其他 CORS 相关的头信息
+#     if request.method == 'OPTIONS':
+#         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE'
+#         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    
+#     return response
 
 
 # 定义错误的处理方法

@@ -59,3 +59,16 @@ def list():
     }
     return success(page_result)
 
+
+@login_required
+@blueprint.route('/api/strategy/list', methods=['GET'])
+def get(): 
+    page_result = {
+        "current": 1,
+        "total": len(strategy_objects),
+        "size": len(strategy_objects),
+        "pages": 1,
+        "records": strategy_objects
+    }
+    return success(page_result)
+

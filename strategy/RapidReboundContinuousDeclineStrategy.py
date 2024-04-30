@@ -61,7 +61,7 @@ class RapidReboundContinuousDeclineStrategy(BaseStrategy):
 
         avarige_volume = total_volumes/days 
         #需要满足最大成交量，最小成交量以及购买日的成交量需要小于平均成交量的需求
-        return max_volume > 200000 and (avarige_volume > self.data.volume[0] and avarige_volume > 100000) or self.data.volume[0] < 10000
+        return max_volume > 200000 and avarige_volume > 100000
     
 
     def reset(self):

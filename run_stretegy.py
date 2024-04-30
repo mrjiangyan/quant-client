@@ -89,6 +89,7 @@ def process_strategy(symbol: Symbol, period:str, start_datetime:datetime, strate
         # 将策略实例添加到Cerebro中
         cerebro.addstrategy(strategy_cls, {}, shared_variable=shared_var, start_date= start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
 
+        cerebro.broker.set_shortcash(False)
         # Add the first strategy to the engine with the shared variable
         # cerebro.addstrategy(BuyExecutor, shared_variable=shared_var, start_date=start_datetime.date, end_date=datetime.now().date, log_file_path=log_file_path, symbol = symbol)
 

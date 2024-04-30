@@ -1,5 +1,5 @@
 from .BaseStrategy import BaseStrategy
-from .MacdStrategy import MacdStrategy
+from .RapidShortStrategy import RapidShortStrategy
 from .FastDropReboundStrategy import FastDropReboundStrategy
 from .MacdTrendStrategy import MacdTrendStrategy
 from .RapidReboundContinuousDeclineStrategy import RapidReboundContinuousDeclineStrategy
