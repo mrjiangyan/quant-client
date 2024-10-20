@@ -13,7 +13,10 @@ class RapidShortStrategy(BaseStrategy):
         ('min_volume', 100*10000),  # 最小成交量不能低于50万
         ('min_price', 2),  # 最低价格不能低于2元，否则实际能够卖空的标的也会很少
         ('max_price', 20),  # 最高价格不能高于20元，否则大概率不会出现大幅下跌
-        ('turnover_rate', 5),  # 最低换手率不能低于5%，否则没有充分换手，不会出现回调走势
+        ('small_cap_turnover_rate', 2),  # 总股本小于1000万的换手率要超过200%
+        ('medium_cap_turnover_rate', 1),  # 总股本在1000万到5000万之间的换手率不能低于100%
+        ('large_cap_turnover_rate', 0.5),  # 总股本在5000万到1亿之间的换手率不能低于50%
+        ('huge_cap_turnover_rate', 0.2),  # 总股本超过1亿的换手率不能低于20%
     )
 
     def __init__(self, *argv):
@@ -27,11 +30,12 @@ class RapidShortStrategy(BaseStrategy):
             return
         if len(self) > self.params.lookback_period:
             # 计算振幅
-            amplitude = (self.data.close[0] - min(self.data.low.get(size=self.params.lookback_period))) / min(self.data.low.get(size=self.params.lookback_period))
-            
-            if (amplitude <= self.params.amplitude_threshold and self.data.volume[0] > self.params.min_volume
+            # amplitude = (self.data.close[0] - min(self.data.low.get(size=self.params.lookback_period))) / min(self.data.low.get(size=self.params.lookback_period))
+            # logger.info(f'{self.datas[0].datetime.datetime(0)}', amplitude)
+            # if (amplitude <= self.params.amplitude_threshold and 
+            if    (self.data.volume[0] > self.params.min_volume
                 and  self.params.max_price > self.data.close[0] > self.params.min_price
-                and (self.params.turnover_rate < self.turnover_rate(self.data.volume[0]) or  self.turnover_rate(self.data.volume[0]) == 0)
+                and (self._check_turnover_rate(self.data.volume[0]))
                 ):
                 # 计算当日涨幅
                 daily_return = (self.data.high[0] - self.data.close[-1]) / self.data.close[-1]
@@ -39,6 +43,7 @@ class RapidShortStrategy(BaseStrategy):
                     self.data.high[0] > self.bollinger.lines.top[0] * (1 + self.params.bollinger_upper_threshold)):
                     # 进行卖空交易
                     if self.data.low[0] > self.data.close[-1]:
+                        self.log('发出卖空信号')
                         if self.internal_sell(): 
                             self.sell_signal = False
                     else:
@@ -51,3 +56,20 @@ class RapidShortStrategy(BaseStrategy):
         if self.sellprice > 0 and (self.sellprice  - self.data.low[0]) / self.sellprice > self.params.exit_return_threshold:
             self.internal_buy()
             self.sell_signal = False
+
+    
+    def _check_turnover_rate(self, volume):
+        # 获取总股本
+        total_shares_outstanding = self.params.symbol.shares_outstanding if self.params.symbol.shares_outstanding else 0
+        if total_shares_outstanding == 0:
+            return True
+        turnover_rate = self.turnover_rate(volume)
+        
+        if total_shares_outstanding < 1000 * 10000:
+            return turnover_rate > self.params.small_cap_turnover_rate 
+        elif 1000 * 10000 <= total_shares_outstanding < 5000 * 10000:
+            return turnover_rate >= self.params.medium_cap_turnover_rate
+        elif 5000 * 10000 <= total_shares_outstanding < 10000 * 10000:
+            return turnover_rate >= self.params.large_cap_turnover_rate
+        elif total_shares_outstanding >= 10000 * 10000:
+            return turnover_rate >= self.params.huge_cap_turnover_rate

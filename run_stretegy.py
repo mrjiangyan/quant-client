@@ -144,6 +144,19 @@ def analyze_returns(symbol_returns, start_datetime:datetime,output_path:str):
     
     
     with open(log_file_path, 'a') as f:
+        #插入策略相关的配置，便于回测需要:
+        f.write(f"回测相关的参数")
+        f.write('\n')
+        f.write(f"------------------------------------------------")
+        f.write('\n')
+        f.write(f"period: {period}")
+        f.write('\n')
+        f.write(f"days: {days}")
+        f.write('\n')
+        f.write(f"strategy: {strategy_cls.__name__}")
+        f.write('\n')
+        f.write(f"------------------------------------------------")
+        f.write('\n')
         #输出选择的参数
         f.write(f"起始时间: {start_datetime}")
         f.write('\n')
@@ -169,7 +182,11 @@ def analyze_returns(symbol_returns, start_datetime:datetime,output_path:str):
             print(content)
             f.write(content)
             f.write('\n')
-        f.write(symbols)
+        f.write(f"------------------------------------------------")
+        f.write('\n')
+        f.write(f'symbols: {symbols}')
+        f.write('\n')
+        f.write(f"------------------------------------------------")
         f.write('\n')
                    
 def select_strategy():
@@ -249,7 +266,6 @@ if __name__ == '__main__':
     days = int(default_days)
 
     strategy_cls = select_strategy()
-
     
     run_strategy(input_symbol, period, days, strategy_cls)
 

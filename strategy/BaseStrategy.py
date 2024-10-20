@@ -219,7 +219,7 @@ class BaseStrategy(bt.Strategy):
         
         if self.params.log_file_path:
             with open(self.params.log_file_path, 'a') as f:
-                f.write(f"{dt.isoformat()}, {self.params.name}, {txt}\n")
+                f.write(f"{dt.isoformat()}, {txt}\n")
 
 
     def notify_trade(self, trade):

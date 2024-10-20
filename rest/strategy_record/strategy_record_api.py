@@ -26,6 +26,8 @@ import re
 module_name = "strategy"
 summary_file_name = '_summary.log'
 strategy_set = set()
+# 指定的关键字列表
+forbidden_keywords = ['symbols', 'days', 'period', 'strategy']
 
 def get_all_classes(module_name):
     module = importlib.import_module(module_name)
@@ -213,12 +215,10 @@ def recursive_directory_file(path, params: StrategyRecordQueryForm):
     if os.path.exists(summary_path):
         # 打开文件并逐行读取内容
         with open(summary_path, 'r') as file:
-            for line in file:
-                # 如果当前行包含符号 ":"，则进行处理
-                if ':' in line:
-                    # 使用 split() 方法按 ":" 分割每行，并将结果存储到字典中
-                    key, value = line.strip().split(':', 1)  # 使用 maxsplit 参数限制分割次数为 1，防止多个 ":" 导致的错误
-                    data_map[key.strip()] = value.strip()
+           # 用列表推导式过滤不包含指定关键字的键值对，并存储到字典中
+           data_map = {key.strip(): value.strip() for line in file if ':' in line for key, value in [line.strip().split(':', 1)] if all(keyword not in key.strip() for keyword in forbidden_keywords)}
+                    
+
 
     # 获取指定目录中的所有文件和子目录
     contents = os.listdir(path)
