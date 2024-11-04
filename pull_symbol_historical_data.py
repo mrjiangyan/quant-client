@@ -114,8 +114,6 @@ def should_download(symbol:Symbol, file_path:str):
     if '^' in symbol.symbol or '/' in symbol.symbol:
         return False
         
-    if symbol.compute == 0:
-        return False
     # if symbol.last_price < 1 or symbol.last_price > 50:
     #     return False
      

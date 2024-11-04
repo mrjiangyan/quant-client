@@ -4,7 +4,6 @@ from data.model.t_symbol import Symbol
 import os
 from data.service.symbol_service import get_by_symbol
 from data import database
-import math
 
 
 target_dir = os.getcwd()
@@ -14,7 +13,7 @@ current_directory = os.getcwd()
 # 必须要通过app上下文去启动数据库
 database.global_init()
 
-local_path = "nasdaq_latest.csv"
+local_path = "nasdaq_screener_1730052984211.csv"
 
 # Get the current working directory
 current_directory = os.getcwd()
@@ -47,15 +46,16 @@ with database.create_database_session() as db_sess:
                 domain.short = 1
                 is_create = True
             print(row)
-            if domain.country != row['Country'] and not row['Country']:
-                domain.country = row['Country']
+            domain.country = row['Country']   
             domain.industry = row['Industry']
             domain.ipo_year = row['IPO Year']
-            domain.volume = row['Volume'] 
-            domain.name = row['Name'] 
-            domain.last_price = row['Last Sale'].replace("$","")
+            domain.volume = row['Volume']
+            domain.name = row['Name']
+            domain.last_price = row['Last Sale'].replace("$", "")
             domain.market = 'US'
             domain.market_cap = row['Market Cap']
+            domain.net_change = float(row['Net Change'])
+            domain.change_rate = float(row['% Change'].replace("%", ""))
             market_cap = float(domain.market_cap)
             # 检查 domain.market_cap 是否为有效数值
             if isinstance(domain.market_cap, str):
@@ -73,8 +73,6 @@ with database.create_database_session() as db_sess:
                 domain.shares_outstanding = int(market_cap / float(domain.last_price))
             else:
                 domain.shares_outstanding = 0  # 如果 market_cap 不是有效数值，设置 shares_outstanding 为 0
-            if row['% Change']:
-                domain.change = str(row['% Change']).replace('%','')
             if is_create == False:
                 # 如果记录已经存在于数据库中，使用 merge 进行更新
                 db_sess.merge(domain)

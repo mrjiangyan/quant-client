@@ -4,7 +4,6 @@
 """
 from time import sleep
 import futu as ft
-import sys
 from loguru import logger
 
 def simple_sell(quote_ctx, trade_ctx, stock_code, trade_price, volume, trade_env, order_type=ft.OrderType.NORMAL):

@@ -14,7 +14,6 @@ __TemplateRstName__ = "rst_template.txt"
 template = load_template.FutuTemplate("function.template")
 
 
-
 def change_variable_name(listx):  # 修改变量名
     """把骆驼变量名变成下划线的方式（全大写）"""
     listy = listx[0]

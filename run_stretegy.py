@@ -38,8 +38,6 @@ def allow_cerebro(symbol:Symbol, period:str ):
     if not (0.55 < symbol.last_price < 50):
         return False
     
-    if symbol.compute == False:
-        return False
     # 空白支票公司
     # if symbol.industry == 'Blank Checks':
     #     logger.info(False)

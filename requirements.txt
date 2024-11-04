@@ -8,8 +8,9 @@ sqlalchemy_serializer
 pymysql
 yahooquery
 backtrader
-# gevent
-
+pyyaml
+requests
+bs4
 retrying
 # pyfolio==0.9.2
 # pymysql==1.1.0

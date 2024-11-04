@@ -38,6 +38,7 @@ pip-delete-this-directory.txt
 
 **/historical_data/**/**
 
+config.yaml
 output/**/**
 # Unit test / coverage reports
 htmlcov/
